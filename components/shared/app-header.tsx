@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { ChatSelector } from './chat-selector'
 import { MobileMenu } from './mobile-menu'
@@ -78,9 +79,16 @@ export function AppHeader({ className = '' }: AppHeaderProps) {
             <Link
               href="/"
               onClick={handleLogoClick}
-              className="text-lg font-semibold text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300"
+              className="flex items-center text-gray-900 dark:text-white hover:opacity-80 transition-opacity"
             >
-              v0 Clone
+              <Image
+                src="/logo.svg"
+                alt="Altira"
+                width={99}
+                height={23}
+                className="h-6 w-auto"
+                priority
+              />
             </Link>
             {/* Hide ChatSelector on mobile */}
             <div className="hidden lg:block">
@@ -88,41 +96,8 @@ export function AppHeader({ className = '' }: AppHeaderProps) {
             </div>
           </div>
 
-          {/* Desktop right side - What's This, GitHub, Deploy, and User */}
+          {/* Desktop right side - User */}
           <div className="hidden lg:flex items-center gap-4">
-            <Button
-              variant="outline"
-              className="py-1.5 px-2 h-fit text-sm"
-              onClick={() => setIsInfoDialogOpen(true)}
-            >
-              <Info size={16} />
-              What's This?
-            </Button>
-            <Button
-              variant="outline"
-              className="py-1.5 px-2 h-fit text-sm"
-              asChild
-            >
-              <Link
-                href="https://github.com/vercel/v0-sdk"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <GitHubIcon size={16} />
-                vercel/v0-sdk
-              </Link>
-            </Button>
-
-            {/* Deploy with Vercel button - hidden on mobile */}
-            <Button
-              className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900 py-1.5 px-2 h-fit text-sm"
-              asChild
-            >
-              <Link href={DEPLOY_URL} target="_blank" rel="noopener noreferrer">
-                <VercelIcon size={16} />
-                Deploy with Vercel
-              </Link>
-            </Button>
             <UserNav session={session} />
           </div>
 
