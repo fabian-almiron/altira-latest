@@ -26,13 +26,7 @@ export async function GET(
       )
     }
 
-    // Verify the chat belongs to the user
-    if (ownership.user_id !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Forbidden' },
-        { status: 403 },
-      )
-    }
+    // Allow all authenticated users to view chat info (shared data mode)
 
     // Get client info if available
     let client = null
