@@ -15,7 +15,7 @@ export async function GET() {
       )
     }
 
-    // Get all chat ownerships for this user with client information
+    // Get ALL chat ownerships with client information (shared across all users)
     const ownershipsWithClients = await db
       .select({
         chatId: chat_ownerships.v0_chat_id,
@@ -29,7 +29,6 @@ export async function GET() {
       })
       .from(chat_ownerships)
       .leftJoin(clients, eq(chat_ownerships.client_id, clients.id))
-      .where(eq(chat_ownerships.user_id, session.user.id))
       .orderBy(desc(chat_ownerships.created_at))
 
     // Format the response
