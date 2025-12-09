@@ -1,0 +1,9 @@
+{
+  "buildCommand": "pnpm db:migrate && pnpm build",
+  "env": {
+    "AUTH_SECRET": "@auth-secret",
+    "POSTGRES_URL": "@postgres-url",
+    "V0_API_KEY": "@v0-api-key"
+  }
+}
+
