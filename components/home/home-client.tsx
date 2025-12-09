@@ -70,6 +70,7 @@ export function HomeClient() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [activePanel, setActivePanel] = useState<'chat' | 'preview'>('chat')
+  const [clientCreated, setClientCreated] = useState(false) // Track if client was created
   const router = useRouter()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -253,14 +254,47 @@ export function HomeClient() {
       if (!currentChatId || chatData.object === 'chat') {
         setCurrentChatId(chatData.id)
         setCurrentChat({ id: chatData.id })
+        setShowChatInterface(true)
 
-        // Update URL without triggering Next.js routing
-        window.history.pushState(null, '', `/chats/${chatData.id}`)
+        // Update URL without triggering Next.js routing - use replaceState to avoid navigation issues
+        window.history.replaceState(null, '', `/chats/${chatData.id}`)
       }
 
       // Create ownership record for new chat (only if this is a new chat)
-      if (!currentChatId) {
+      if (!currentChatId && !clientCreated) {
+        setClientCreated(true) // Mark as created to prevent duplicates
+        
         try {
+          const websiteName = sessionStorage.getItem('newChatName') || undefined
+          const clientInfoStr = sessionStorage.getItem('newClientInfo')
+          
+          // ALWAYS create a client using the chat ID
+          const clientInfo = clientInfoStr ? JSON.parse(clientInfoStr) : {}
+          
+          // Create client with chat ID - even if no additional info
+          const clientResponse = await fetch('/api/clients', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: chatData.id, // Use chat ID as client ID
+              name: clientInfo.name || `Project ${chatData.id.slice(0, 8)}`,
+              email: clientInfo.email || null,
+              phone: clientInfo.phone || null,
+              company: clientInfo.company || null,
+            }),
+          })
+          
+          let clientId = chatData.id // Default to chat ID
+          if (clientResponse.ok) {
+            const { client } = await clientResponse.json()
+            if (client?.id) {
+              clientId = client.id
+            }
+          } else {
+            console.warn('Failed to create client, using chat ID as fallback')
+          }
+          
+          // Create ownership with client ID
           await fetch('/api/chat/ownership', {
             method: 'POST',
             headers: {
@@ -268,8 +302,14 @@ export function HomeClient() {
             },
             body: JSON.stringify({
               chatId: chatData.id,
+              clientId: clientId,
+              websiteName: websiteName,
             }),
           })
+          
+          // Clear session storage after creating ownership
+          sessionStorage.removeItem('newChatName')
+          sessionStorage.removeItem('newClientInfo')
         } catch (error) {
           console.error('Failed to create chat ownership:', error)
           // Don't fail the UI if ownership creation fails
@@ -420,7 +460,7 @@ export function HomeClient() {
 
   if (showChatInterface) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-black flex flex-col">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         {/* Handle search params with Suspense boundary */}
         <Suspense fallback={null}>
           <SearchParamsHandler onReset={handleReset} />
@@ -483,7 +523,7 @@ export function HomeClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Handle search params with Suspense boundary */}
       <Suspense fallback={null}>
         <SearchParamsHandler onReset={handleReset} />

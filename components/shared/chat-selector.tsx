@@ -4,17 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import {
-  MessageSquare,
-  MoreHorizontal,
-  Edit2,
-  Trash2,
-  Copy,
-  ExternalLink,
   Eye,
   EyeOff,
   Users,
   Lock,
-  Rocket,
+  User,
 } from 'lucide-react'
 import {
   Select,
@@ -23,13 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
@@ -47,6 +34,15 @@ interface Chat {
   privacy?: 'public' | 'private' | 'team' | 'team-edit' | 'unlisted'
   createdAt: string
   url?: string
+}
+
+interface ClientInfo {
+  websiteName?: string | null
+  client?: {
+    id: string
+    name: string
+    company?: string | null
+  } | null
 }
 
 // Helper function to get display name for a chat
@@ -107,6 +103,7 @@ export function ChatSelector() {
   const [isDeletingChat, setIsDeletingChat] = useState(false)
   const [isDuplicatingChat, setIsDuplicatingChat] = useState(false)
   const [isChangingVisibility, setIsChangingVisibility] = useState(false)
+  const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null)
 
   // Get current chat ID if on a chat page
   const currentChatId = pathname?.startsWith('/chats/')
@@ -134,6 +131,28 @@ export function ChatSelector() {
 
     fetchChats()
   }, [session?.user?.id])
+
+  // Fetch client info for current chat
+  useEffect(() => {
+    if (!currentChatId) {
+      setClientInfo(null)
+      return
+    }
+
+    const fetchClientInfo = async () => {
+      try {
+        const response = await fetch(`/api/chats/${currentChatId}/info`)
+        if (response.ok) {
+          const data = await response.json()
+          setClientInfo(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch client info:', error)
+      }
+    }
+
+    fetchClientInfo()
+  }, [currentChatId])
 
   const handleValueChange = (chatId: string) => {
     router.push(`/chats/${chatId}`)
@@ -276,19 +295,19 @@ export function ChatSelector() {
 
   return (
     <>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3">
         <Select value={currentChatId || ''} onValueChange={handleValueChange}>
           <SelectTrigger
             className="w-fit min-w-[150px] max-w-[250px]"
             size="sm"
           >
-            <SelectValue placeholder="Select chat">
+            <SelectValue placeholder="Select project">
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
+                <User className="h-4 w-4" />
                 <span className="truncate">
                   {currentChat
                     ? getChatDisplayName(currentChat)
-                    : 'Select chat'}
+                    : 'Select project'}
                 </span>
               </div>
             </SelectValue>
@@ -298,120 +317,30 @@ export function ChatSelector() {
               chats.slice(0, 15).map((chat) => (
                 <SelectItem key={chat.id} value={chat.id}>
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
+                    <User className="h-4 w-4" />
                     <span className="truncate">{getChatDisplayName(chat)}</span>
                   </div>
                 </SelectItem>
               ))
             ) : (
               <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                No chats yet
+                No projects yet
               </div>
             )}
           </SelectContent>
         </Select>
 
-        {/* Chat Context Menu */}
-        {currentChat && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild suppressHydrationWarning>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                disabled={
-                  isRenamingChat ||
-                  isDeletingChat ||
-                  isDuplicatingChat ||
-                  isChangingVisibility
-                }
-              >
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">Chat options</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <a
-                  href={`https://v0.app/chat/${currentChatId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  View on v0.dev
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a
-                  href={`https://v0.dev/chat/${currentChatId}/deploy`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center"
-                >
-                  <Rocket className="mr-2 h-4 w-4" />
-                  Deploy to Vercel
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setIsDuplicateDialogOpen(true)}
-                disabled={
-                  isRenamingChat ||
-                  isDeletingChat ||
-                  isDuplicatingChat ||
-                  isChangingVisibility
-                }
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicate Chat
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setSelectedVisibility(currentChat.privacy || 'private')
-                  setIsVisibilityDialogOpen(true)
-                }}
-                disabled={
-                  isRenamingChat ||
-                  isDeletingChat ||
-                  isDuplicatingChat ||
-                  isChangingVisibility
-                }
-              >
-                {getPrivacyIcon(currentChat.privacy || 'private')}
-                <span className="ml-2">Change Visibility</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setRenameChatName(currentChat.name || '')
-                  setIsRenameDialogOpen(true)
-                }}
-                disabled={
-                  isRenamingChat ||
-                  isDeletingChat ||
-                  isDuplicatingChat ||
-                  isChangingVisibility
-                }
-              >
-                <Edit2 className="mr-2 h-4 w-4" />
-                Rename Chat
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setIsDeleteDialogOpen(true)}
-                disabled={
-                  isRenamingChat ||
-                  isDeletingChat ||
-                  isDuplicatingChat ||
-                  isChangingVisibility
-                }
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Chat
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Client Info Display */}
+        {currentChatId && clientInfo?.client && (
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 border-l border-gray-300 dark:border-gray-700 pl-3">
+            <Users className="h-4 w-4" />
+            <span className="font-medium">{clientInfo.client.name}</span>
+            {clientInfo.client.company && (
+              <span className="text-xs text-gray-500 dark:text-gray-500">
+                @ {clientInfo.client.company}
+              </span>
+            )}
+          </div>
         )}
       </div>
 

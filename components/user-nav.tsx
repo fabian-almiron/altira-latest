@@ -22,7 +22,6 @@ export function UserNav({ session }: UserNavProps) {
   const initials =
     session?.user?.email?.split('@')[0]?.slice(0, 2)?.toUpperCase() || 'U'
 
-  const isGuest = session?.user?.type === 'guest'
   const isSignedOut = !session
 
   return (
@@ -40,7 +39,7 @@ export function UserNav({ session }: UserNavProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {isSignedOut ? 'Not signed in' : isGuest ? 'Guest User' : 'User'}
+              {isSignedOut ? 'Not signed in' : 'User'}
             </p>
             {session?.user?.email && (
               <p className="text-xs leading-none text-muted-foreground">
@@ -50,7 +49,7 @@ export function UserNav({ session }: UserNavProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {(isGuest || isSignedOut) && (
+        {isSignedOut && (
           <>
             <DropdownMenuItem asChild>
               <a href="/register" className="cursor-pointer">
@@ -62,14 +61,14 @@ export function UserNav({ session }: UserNavProps) {
                 <span>Sign In</span>
               </a>
             </DropdownMenuItem>
-            {!isSignedOut && <DropdownMenuSeparator />}
+            <DropdownMenuSeparator />
           </>
         )}
         {!isSignedOut && (
           <DropdownMenuItem
             onClick={async () => {
               // Clear any local session data first
-              await signOut({ callbackUrl: '/', redirect: true })
+              await signOut({ callbackUrl: '/login', redirect: true })
             }}
             className="cursor-pointer"
           >

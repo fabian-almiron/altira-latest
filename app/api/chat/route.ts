@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, ChatDetail } from 'v0-sdk'
 import { auth } from '@/app/(auth)/auth'
-import {
-  createChatOwnership,
-  createAnonymousChatLog,
-  getChatCountByUserId,
-  getChatCountByIP,
-} from '@/lib/db/queries'
-import {
-  entitlementsByUserType,
-  anonymousEntitlements,
-} from '@/lib/entitlements'
+import { createChatOwnership, getChatCountByUserId } from '@/lib/db/queries'
+import { entitlementsByUserType } from '@/lib/entitlements'
 import { ChatSDKError } from '@/lib/errors'
 
 // Create v0 client with custom baseUrl if V0_API_URL is set
@@ -18,25 +10,18 @@ const v0 = createClient(
   process.env.V0_API_URL ? { baseUrl: process.env.V0_API_URL } : {},
 )
 
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  const realIP = request.headers.get('x-real-ip')
-
-  if (forwarded) {
-    return forwarded.split(',')[0].trim()
-  }
-
-  if (realIP) {
-    return realIP
-  }
-
-  // Fallback to connection remote address or unknown
-  return 'unknown'
-}
-
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
+
+    // Require authentication - reject all requests without a valid session
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Authentication required', message: 'You must be logged in to use the chat.' },
+        { status: 401 },
+      )
+    }
+
     const { message, chatId, streaming, attachments, projectId } =
       await request.json()
 
@@ -47,44 +32,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Rate limiting
-    if (session?.user?.id) {
-      // Authenticated user rate limiting
-      const chatCount = await getChatCountByUserId({
-        userId: session.user.id,
-        differenceInHours: 24,
-      })
+    // Authenticated user rate limiting
+    const chatCount = await getChatCountByUserId({
+      userId: session.user.id,
+      differenceInHours: 24,
+    })
 
-      const userType = session.user.type
-      if (chatCount >= entitlementsByUserType[userType].maxMessagesPerDay) {
-        return new ChatSDKError('rate_limit:chat').toResponse()
-      }
-
-      console.log('API request:', {
-        message,
-        chatId,
-        streaming,
-        userId: session.user.id,
-      })
-    } else {
-      // Anonymous user rate limiting
-      const clientIP = getClientIP(request)
-      const chatCount = await getChatCountByIP({
-        ipAddress: clientIP,
-        differenceInHours: 24,
-      })
-
-      if (chatCount >= anonymousEntitlements.maxMessagesPerDay) {
-        return new ChatSDKError('rate_limit:chat').toResponse()
-      }
-
-      console.log('API request (anonymous):', {
-        message,
-        chatId,
-        streaming,
-        ip: clientIP,
-      })
+    const userType = session.user.type
+    if (chatCount >= entitlementsByUserType[userType].maxMessagesPerDay) {
+      return new ChatSDKError('rate_limit:chat').toResponse()
     }
+
+    console.log('API request:', {
+      message,
+      chatId,
+      streaming,
+      userId: session.user.id,
+    })
 
     console.log('Using baseUrl:', process.env.V0_API_URL || 'default')
 
@@ -168,27 +132,17 @@ export async function POST(request: NextRequest) {
 
     const chatDetail = chat as ChatDetail
 
-    // Create ownership mapping or anonymous log for new chat
+    // Create ownership mapping for new chat
     if (!chatId && chatDetail.id) {
       try {
-        if (session?.user?.id) {
-          // Authenticated user - create ownership mapping
-          await createChatOwnership({
-            v0ChatId: chatDetail.id,
-            userId: session.user.id,
-          })
-          console.log('Chat ownership created:', chatDetail.id)
-        } else {
-          // Anonymous user - log for rate limiting
-          const clientIP = getClientIP(request)
-          await createAnonymousChatLog({
-            ipAddress: clientIP,
-            v0ChatId: chatDetail.id,
-          })
-          console.log('Anonymous chat logged:', chatDetail.id, 'IP:', clientIP)
-        }
+        // Create ownership mapping for authenticated user
+        await createChatOwnership({
+          v0ChatId: chatDetail.id,
+          userId: session.user.id,
+        })
+        console.log('Chat ownership created:', chatDetail.id)
       } catch (error) {
-        console.error('Failed to create chat ownership/log:', error)
+        console.error('Failed to create chat ownership:', error)
         // Don't fail the request if database save fails
       }
     }

@@ -21,7 +21,7 @@ function getClientIP(request: NextRequest): string {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
-    const { chatId } = await request.json()
+    const { chatId, clientId, websiteName } = await request.json()
 
     if (!chatId) {
       return NextResponse.json(
@@ -49,12 +49,14 @@ export async function POST(request: NextRequest) {
         })
       }
       
-      // User exists - create ownership mapping
+      // User exists - create ownership mapping with optional client
       await createChatOwnership({
         v0ChatId: chatId,
         userId: session.user.id,
+        clientId: clientId || null,
+        websiteName: websiteName || null,
       })
-      console.log('Chat ownership created via API:', chatId)
+      console.log('Chat ownership created via API:', chatId, clientId ? `Client: ${clientId}` : '', websiteName ? `Name: ${websiteName}` : '')
     } else {
       // Anonymous user - log for rate limiting
       const clientIP = getClientIP(request)

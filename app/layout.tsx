@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'v0 Clone',
+  title: 'Altira',
   description:
-    'A clone of v0.dev built with the v0 SDK - Generate and preview React components with AI',
+    'Altira - Generate and preview React components with AI',
 }
 
 export default function RootLayout({

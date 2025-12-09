@@ -6,6 +6,7 @@ import {
   uuid,
   primaryKey,
   unique,
+  text,
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
@@ -17,6 +18,24 @@ export const users = pgTable('users', {
 
 export type User = InferSelectModel<typeof users>
 
+// Clients table - stores client information
+// NOTE: id is the v0 chat ID (not UUID format)
+export const clients = pgTable('clients', {
+  id: varchar('id', { length: 255 }).primaryKey().notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }),
+  phone: varchar('phone', { length: 50 }),
+  company: varchar('company', { length: 255 }),
+  status: varchar('status', { length: 20 }).notNull().default('active'), // 'active' | 'inactive'
+  user_id: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
+  created_at: timestamp('created_at').notNull().defaultNow(),
+  updated_at: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export type Client = InferSelectModel<typeof clients>
+
 // Simple ownership mapping for v0 chats
 // The actual chat data lives in v0 API, we just track who owns what
 export const chat_ownerships = pgTable(
@@ -27,6 +46,16 @@ export const chat_ownerships = pgTable(
     user_id: uuid('user_id')
       .notNull()
       .references(() => users.id),
+    client_id: varchar('client_id', { length: 255 }).references(() => clients.id), // Link chat to client (v0 chat ID)
+    website_name: varchar('website_name', { length: 255 }), // Optional name for the website/chat
+    // Deployment information
+    github_repo_name: varchar('github_repo_name', { length: 255 }), // GitHub repository name
+    github_repo_url: text('github_repo_url'), // GitHub repository URL
+    vercel_project_id: varchar('vercel_project_id', { length: 255 }), // Vercel project ID
+    vercel_project_url: text('vercel_project_url'), // Vercel project dashboard URL
+    vercel_deployment_url: text('vercel_deployment_url'), // Live deployment URL
+    deployment_status: varchar('deployment_status', { length: 50 }), // e.g., 'deployed', 'building', 'failed'
+    deployed_at: timestamp('deployed_at'), // When the deployment was created
     created_at: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => ({

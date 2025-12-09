@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
-import { guestRegex, isDevelopmentEnvironment } from './lib/constants'
+import { isDevelopmentEnvironment } from './lib/constants'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -32,33 +32,17 @@ export async function middleware(request: NextRequest) {
   })
 
   if (!token) {
-    // Allow API routes to proceed without authentication for anonymous chat creation
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.next()
-    }
-
-    // Allow homepage for anonymous users
-    if (pathname === '/') {
-      return NextResponse.next()
-    }
-
-    // Redirect protected pages to login
-    if (['/chats', '/projects'].some((path) => pathname.startsWith(path))) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-
     // Allow login and register pages
     if (['/login', '/register'].includes(pathname)) {
       return NextResponse.next()
     }
 
-    // For any other protected routes, redirect to login
+    // Redirect all other pages to login (including homepage and all API routes)
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  const isGuest = guestRegex.test(token?.email ?? '')
-
-  if (token && !isGuest && ['/login', '/register'].includes(pathname)) {
+  // Redirect authenticated users away from login/register pages
+  if (token && ['/login', '/register'].includes(pathname)) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 

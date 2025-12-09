@@ -22,6 +22,27 @@
       "when": 1757370487319,
       "tag": "0002_many_ezekiel",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1765309708002,
+      "tag": "0003_majestic_wasp",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765310000000,
+      "tag": "0004_update_chat_ownerships",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1765320000000,
+      "tag": "0005_change_client_id_to_varchar",
+      "breakpoints": true
     }
   ]
 }

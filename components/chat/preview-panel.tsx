@@ -35,7 +35,7 @@ export function PreviewPanel({
     <div
       className={cn(
         'flex flex-col h-full transition-all duration-300',
-        isFullscreen ? 'fixed inset-0 z-50 bg-white dark:bg-black' : 'flex-1',
+        isFullscreen ? 'fixed inset-0 z-50 bg-white dark:bg-gray-900' : 'flex-1',
       )}
     >
       <WebPreview
@@ -92,7 +92,7 @@ export function PreviewPanel({
         {currentChat?.demo ? (
           <WebPreviewBody key={refreshKey} src={currentChat.demo} />
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-black">
+          <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
             <div className="text-center">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 No preview available

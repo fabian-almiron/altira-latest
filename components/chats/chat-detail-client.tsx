@@ -74,7 +74,7 @@ export function ChatDetailClient() {
   return (
     <div
       className={cn(
-        'min-h-screen bg-gray-50 dark:bg-black',
+        'min-h-screen bg-gray-50 dark:bg-gray-900',
         isFullscreen && 'fixed inset-0 z-50',
       )}
     >

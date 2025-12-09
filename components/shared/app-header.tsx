@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { ChatSelector } from './chat-selector'
 import { MobileMenu } from './mobile-menu'
+import { DeploymentInfo } from './deployment-info'
 import { useSession } from 'next-auth/react'
 import { UserNav } from '@/components/user-nav'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import useSWR from 'swr'
 
 interface AppHeaderProps {
   className?: string
@@ -53,6 +55,18 @@ export function AppHeader({ className = '' }: AppHeaderProps) {
   const isHomepage = pathname === '/'
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false)
 
+  // Extract chat ID from URL
+  const chatId = pathname.includes('/chats/') 
+    ? pathname.split('/chats/')[1]?.split('/')[0]
+    : null
+
+  // Fetch deployment info for current chat
+  const { data: deploymentInfo } = useSWR(
+    chatId ? `/api/chat/deployment?chatId=${chatId}` : null,
+    (url: string) => fetch(url).then((res) => res.ok ? res.json() : null),
+    { revalidateOnFocus: false }
+  )
+
   // Handle logo click - reset UI if on homepage, otherwise navigate to homepage
   const handleLogoClick = (e: React.MouseEvent) => {
     if (isHomepage) {
@@ -65,7 +79,7 @@ export function AppHeader({ className = '' }: AppHeaderProps) {
 
   return (
     <div
-      className={`${!isHomepage ? 'border-b border-border dark:border-input' : ''} ${className}`}
+      className={`bg-white dark:bg-gray-900 ${!isHomepage ? 'border-b border-gray-200 dark:border-gray-800' : ''} ${className}`}
     >
       {/* Handle search params with Suspense boundary */}
       <Suspense fallback={null}>
@@ -96,8 +110,15 @@ export function AppHeader({ className = '' }: AppHeaderProps) {
             </div>
           </div>
 
-          {/* Desktop right side - User */}
+          {/* Desktop right side - Deployment Info and User */}
           <div className="hidden lg:flex items-center gap-4">
+            {deploymentInfo && (
+              <DeploymentInfo
+                githubRepoUrl={deploymentInfo.githubRepoUrl}
+                vercelProjectUrl={deploymentInfo.vercelProjectUrl}
+                vercelDeploymentUrl={deploymentInfo.vercelDeploymentUrl}
+              />
+            )}
             <UserNav session={session} />
           </div>
 

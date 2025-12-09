@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from 'v0-sdk'
 import { auth } from '@/app/(auth)/auth'
-import { getChatOwnership } from '@/lib/db/queries'
+import { getChatOwnership, updateChatDeployment } from '@/lib/db/queries'
 import { getTemplateFilesForExport, detectAndNormalizeFonts } from '@/lib/export-templates'
 
 const v0 = createClient(
@@ -482,6 +482,23 @@ export async function POST(request: NextRequest) {
     if (!deployment) {
       console.log('⚠️ Deployment trigger failed, but project is set up')
       
+      const vercelDashboardUrl = `https://vercel.com/${vercelProject.accountId}/${vercelProject.name}`
+      
+      // Save partial deployment info to database
+      try {
+        await updateChatDeployment({
+          v0ChatId: chatId,
+          githubRepoName: repoName,
+          githubRepoUrl: githubRepoUrl,
+          vercelProjectId: vercelProject.id,
+          vercelProjectUrl: vercelDashboardUrl,
+          deploymentStatus: 'pending',
+        })
+        console.log('✅ Partial deployment info saved to database')
+      } catch (dbError) {
+        console.error('⚠️ Failed to save deployment info to database:', dbError)
+      }
+      
       return NextResponse.json(
         {
           partialSuccess: true,
@@ -496,7 +513,7 @@ export async function POST(request: NextRequest) {
           vercelProject: {
             id: vercelProject.id,
             name: vercelProject.name,
-            dashboardUrl: `https://vercel.com/${vercelProject.accountId}/${vercelProject.name}`,
+            dashboardUrl: vercelDashboardUrl,
           },
           deploymentError: deploymentError?.error?.message || deploymentError?.message || 'Could not auto-trigger deployment',
           details: 'GitHub repo and Vercel project created successfully! Go to Vercel dashboard and click "Deploy" to start your first deployment.',
@@ -514,12 +531,35 @@ export async function POST(request: NextRequest) {
     console.log('✅ Deployment successful!')
 
     // ========================================
-    // SUCCESS - RETURN COMPLETE INFO
+    // STEP 5: SAVE DEPLOYMENT INFO TO DATABASE
     // ========================================
+    console.log('💾 Step 5: Saving deployment info to database...')
     
     // Extract deployment URL (handle different response formats)
     const deployUrl = deployment.url || deployment.alias?.[0] || null
     const deploymentUrl = deployUrl ? `https://${deployUrl}` : null
+    const vercelDashboardUrl = `https://vercel.com/${vercelProject.accountId}/${vercelProject.name}`
+    
+    // Save deployment information to database
+    try {
+      await updateChatDeployment({
+        v0ChatId: chatId,
+        githubRepoName: repoName,
+        githubRepoUrl: githubRepoUrl,
+        vercelProjectId: vercelProject.id,
+        vercelProjectUrl: vercelDashboardUrl,
+        vercelDeploymentUrl: deploymentUrl || vercelDashboardUrl,
+        deploymentStatus: 'deployed',
+      })
+      console.log('✅ Deployment info saved to database')
+    } catch (dbError) {
+      console.error('⚠️ Failed to save deployment info to database:', dbError)
+      // Don't fail the whole deployment if database save fails
+    }
+
+    // ========================================
+    // SUCCESS - RETURN COMPLETE INFO
+    // ========================================
     
     return NextResponse.json({
       success: true,

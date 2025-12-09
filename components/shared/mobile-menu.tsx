@@ -95,7 +95,7 @@ export function MobileMenu({ onInfoDialogOpen }: MobileMenuProps) {
 
           {/* Menu panel */}
           <div
-            className={`fixed inset-y-0 right-0 w-full max-w-sm bg-white dark:bg-black border-l border-border shadow-lg transform transition-transform duration-300 ease-out ${
+            className={`fixed inset-y-0 right-0 w-full max-w-sm bg-white dark:bg-gray-900 border-l border-border shadow-lg transform transition-transform duration-300 ease-out ${
               isAnimating ? 'translate-x-0' : 'translate-x-full'
             }`}
           >
