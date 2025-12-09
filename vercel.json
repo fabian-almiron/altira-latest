@@ -1,9 +1,41 @@
 {
   "buildCommand": "pnpm db:migrate && pnpm build",
+  "framework": "nextjs",
+  "installCommand": "pnpm install",
+  "regions": ["iad1"],
   "env": {
-    "AUTH_SECRET": "@auth-secret",
-    "POSTGRES_URL": "@postgres-url",
-    "V0_API_KEY": "@v0-api-key"
+    "AUTH_SECRET": {
+      "description": "NextAuth secret key. Generate with: openssl rand -base64 32",
+      "value": "@auth-secret"
+    },
+    "POSTGRES_URL": {
+      "description": "PostgreSQL connection string from Neon, Supabase, or Railway",
+      "value": "@postgres-url"
+    },
+    "V0_API_KEY": {
+      "description": "V0 Platform API key from https://v0.dev/settings/api-keys",
+      "value": "@v0-api-key"
+    },
+    "VERCEL_TOKEN": {
+      "description": "Optional: For Vercel deployment feature. Get from https://vercel.com/account/tokens",
+      "value": "@vercel-token",
+      "required": false
+    },
+    "GITHUB_TOKEN": {
+      "description": "Optional: For GitHub export feature. Create at https://github.com/settings/tokens",
+      "value": "@github-token",
+      "required": false
+    },
+    "BITBUCKET_USERNAME": {
+      "description": "Optional: Your Bitbucket username for Bitbucket export",
+      "value": "@bitbucket-username",
+      "required": false
+    },
+    "BITBUCKET_APP_PASSWORD": {
+      "description": "Optional: Bitbucket app password from https://bitbucket.org/account/settings/app-passwords/",
+      "value": "@bitbucket-app-password",
+      "required": false
+    }
   }
 }
 

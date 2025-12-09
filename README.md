@@ -19,11 +19,18 @@
 </p>
 <br/>
 
-## Deploy Your Own
+## 🚀 Deploy Your Own
 
-You can deploy your own version of the v0 clone to Vercel with one click:
+Deploy your own version of the v0 clone to Vercel with one click:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fv0-sdk%2Ftree%2Fmain%2Fexamples%2Fv0-clone&env=V0_API_KEY,AUTH_SECRET&envDescription=Get+your+v0+API+key&envLink=https%3A%2F%2Fv0.app%2Fchat%2Fsettings%2Fkeys&products=%255B%257B%2522type%2522%253A%2522integration%2522%252C%2522protocol%2522%253A%2522storage%2522%252C%2522productSlug%2522%253A%2522neon%2522%252C%2522integrationSlug%2522%253A%2522neon%2522%257D%255D&project-name=v0-clone&repository-name=v0-clone&demo-title=v0+Clone&demo-description=A+full-featured+v0+clone+built+with+Next.js%2C+AI+Elements%2C+and+the+v0+SDK&demo-url=https%3A%2F%2Fclone-demo.v0-sdk.dev)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffabian-almiron%2Faltira-latest&env=V0_API_KEY,AUTH_SECRET,POSTGRES_URL&envDescription=Required%3A+V0+API+key%2C+Auth+secret%2C+and+PostgreSQL+URL&envLink=https%3A%2F%2Fgithub.com%2Ffabian-almiron%2Faltira-latest%2Fblob%2Fmain%2FVERCEL-DEPLOYMENT.md&project-name=v0-clone&repository-name=v0-clone)
+
+**⚡ Quick Setup (5 minutes):**
+1. Click the button above
+2. Add 3 environment variables (see [VERCEL-DEPLOYMENT.md](./VERCEL-DEPLOYMENT.md))
+3. Deploy!
+
+**📖 Full deployment guide:** [VERCEL-DEPLOYMENT.md](./VERCEL-DEPLOYMENT.md)
 
 ## Setup
 
@@ -111,6 +118,47 @@ This v0 clone includes:
 - **Ownership Mapping**: Authenticated users only see their own chats and projects
 - **Rate Limiting**: Different limits for anonymous, guest, and registered users
 - **User Navigation**: Header dropdown with user info and sign-out options
+
+### 🚀 Enhanced Export & Deployment Features
+
+#### **Git Export System:**
+- **GitHub Export**: Export generated code directly to GitHub repositories
+  - Automatic repository creation
+  - Complete project setup with all dependencies
+  - Dynamic shadcn UI component inclusion
+  - Full documentation included
+  
+- **Bitbucket Export**: Export to Bitbucket with same features
+  - Private repository support
+  - Team collaboration ready
+  - Webhook integration support
+
+#### **Intelligent Template System:**
+- **Base File Generation**: Automatically includes all necessary config files
+  - `package.json` with correct dependencies
+  - `tsconfig.json` for TypeScript
+  - `tailwind.config.ts` for Tailwind CSS 4.x
+  - `postcss.config.js` with proper plugins
+  - `next.config.ts` for Next.js 15
+  - Complete folder structure
+
+- **Shadcn Registry Integration**:
+  - Fetches UI components from official shadcn registry
+  - Dynamic component detection based on imports
+  - Automatic dependency resolution
+  - Fallback components for reliability
+  - Always up-to-date with latest shadcn releases
+
+#### **Deployment Options:**
+- **Direct Vercel Deploy**: Deploy to Vercel with one click (from v0.dev)
+- **Git-based Deployment**: Export to Git, then deploy from repository
+- **Complete Documentation**: Step-by-step guides included
+
+📖 **See detailed documentation:**
+- [Git Export Setup](./GIT-EXPORT-SETUP.md)
+- [Shadcn Registry Integration](./SHADCN-REGISTRY-FALLBACK.md)
+- [Dynamic UI Components](./DYNAMIC-UI-COMPONENTS.md)
+- [Complete Export Solution](./COMPLETE-EXPORT-SOLUTION.md)
 
 ## Usage
 
