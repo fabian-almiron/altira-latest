@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Rocket, Loader2, ExternalLink, CheckCircle2, Zap, GitBranch, Github } from 'lucide-react'
+import { Rocket, Loader2, ExternalLink, CheckCircle2, Github } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -13,13 +13,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 
 interface DeployButtonEnhancedProps {
   chatId: string
@@ -27,8 +20,6 @@ interface DeployButtonEnhancedProps {
   size?: 'default' | 'sm' | 'lg' | 'icon'
   className?: string
 }
-
-type DeployMethod = 'github-vercel' | 'v0' | 'vercel-direct'
 
 export function DeployButtonEnhanced({
   chatId,
@@ -40,7 +31,7 @@ export function DeployButtonEnhanced({
   const [showDialog, setShowDialog] = useState(false)
   const [projectName, setProjectName] = useState('')
   const [repoName, setRepoName] = useState('')
-  const [deployMethod, setDeployMethod] = useState<DeployMethod>('github-vercel')
+  const deployMethod = 'github-vercel' // Only GitHub + Vercel deployment
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null)
   const [githubRepoUrl, setGithubRepoUrl] = useState<string | null>(null)
   const [vercelDashboard, setVercelDashboard] = useState<string | null>(null)
@@ -51,28 +42,19 @@ export function DeployButtonEnhanced({
     setError(null)
 
     try {
-      let endpoint = '/api/deploy'
-      let requestBody: any = { chatId }
+      // GitHub + Vercel deployment only
+      if (!repoName) {
+        setError('Repository name is required')
+        setIsDeploying(false)
+        return
+      }
 
-      // Determine endpoint and body based on deploy method
-      if (deployMethod === 'github-vercel') {
-        endpoint = '/api/deploy/github-vercel'
-        if (!repoName) {
-          setError('Repository name is required for GitHub + Vercel deployment')
-          setIsDeploying(false)
-          return
-        }
-        requestBody = {
-          chatId,
-          repoName: repoName || `v0-${chatId.slice(0, 8)}`,
-          projectName: projectName || undefined,
-          isPrivate: true,
-        }
-      } else if (deployMethod === 'vercel-direct') {
-        endpoint = '/api/deploy/vercel-direct'
-        requestBody.projectName = projectName || undefined
-      } else {
-        requestBody.projectName = projectName || undefined
+      const endpoint = '/api/deploy/github-vercel'
+      const requestBody = {
+        chatId,
+        repoName: repoName || `v0-${chatId.slice(0, 8)}`,
+        projectName: projectName || undefined,
+        isPrivate: true,
       }
 
       const response = await fetch(endpoint, {
@@ -87,63 +69,29 @@ export function DeployButtonEnhanced({
 
       if (!response.ok) {
         // Handle GitHub + Vercel specific errors
-        if (deployMethod === 'github-vercel') {
-          if (data.error?.includes('GitHub token')) {
-            setError(
-              'GitHub token not configured. Add GITHUB_TOKEN to your .env.local file.',
-            )
-          } else if (data.error?.includes('Vercel token')) {
-            setError(
-              'Vercel token not configured. Add VERCEL_TOKEN to your .env.local file.',
-            )
-          } else if (data.error?.includes('already exists')) {
-            setError(
-              'Repository already exists on GitHub. Please choose a different name.',
-            )
-          } else {
-            setError(data.details || data.error || 'Deployment failed')
-          }
-        } else if (deployMethod === 'vercel-direct') {
-          if (data.error === 'Vercel token not configured') {
-            setError(
-              'Vercel token not found. Add VERCEL_TOKEN to your .env.local file.',
-            )
-          } else {
-            setError(data.details || data.error || 'Deployment failed')
-          }
+        if (data.error?.includes('GitHub token')) {
+          setError(
+            'GitHub token not configured. Add GITHUB_TOKEN to your .env.local file.',
+          )
+        } else if (data.error?.includes('Vercel token')) {
+          setError(
+            'Vercel token not configured. Add VERCEL_TOKEN to your .env.local file.',
+          )
+        } else if (data.error?.includes('already exists')) {
+          setError(
+            'Repository already exists on GitHub. Please choose a different name.',
+          )
         } else {
-          if (data.needsFirstDeployment) {
-            setError(data.details || data.error)
-            if (data.v0Url) {
-              console.log('First deployment needed. Visit:', data.v0Url)
-            }
-          } else if (
-            data.error === 'Vercel integration not configured' ||
-            data.error === 'Vercel account not linked'
-          ) {
-            setError(
-              data.details || 'Please connect your Vercel account on v0.dev first.',
-            )
-          } else {
-            setError(data.details || data.error || 'Deployment failed')
-          }
+          setError(data.details || data.error || 'Deployment failed')
         }
         return
       }
 
-      // Success! Handle different response formats
-      if (deployMethod === 'github-vercel' && data.success) {
-        // GitHub + Vercel deployment
+      // Success! GitHub + Vercel deployment
+      if (data.success) {
         setGithubRepoUrl(data.repository?.url || null)
         setVercelDashboard(data.vercelProject?.dashboardUrl || null)
         setDeploymentUrl(data.deployment?.deploymentUrl || null)
-      } else {
-        // Other deployment methods
-        setDeploymentUrl(
-          data.deployment?.vercelUrl ||
-            data.deployment?.url ||
-            `https://v0.dev/chat/${chatId}`,
-        )
       }
       
       console.log('Deployment successful:', data)
@@ -188,7 +136,7 @@ export function DeployButtonEnhanced({
             <DialogDescription>
               {deploymentUrl
                 ? 'Your deployment has been initiated!'
-                : 'Choose your deployment method and deploy your app.'}
+                : 'Deploy your app to GitHub with automatic Vercel deployment.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -202,9 +150,7 @@ export function DeployButtonEnhanced({
                     Deployment Successful!
                   </p>
                   <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                    {deployMethod === 'github-vercel' 
-                      ? 'Your code is on GitHub and deploying to Vercel!'
-                      : 'Your app is being deployed to Vercel.'}
+                    Your code is on GitHub and deploying to Vercel!
                   </p>
                 </div>
               </div>
@@ -243,22 +189,6 @@ export function DeployButtonEnhanced({
                     >
                       <Rocket className="h-4 w-4 mr-2" />
                       Vercel Dashboard
-                    </a>
-                  </Button>
-                )}
-                {deployMethod !== 'github-vercel' && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    asChild
-                  >
-                    <a
-                      href={`https://v0.dev/chat/${chatId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View on v0.dev
                     </a>
                   </Button>
                 )}
@@ -305,71 +235,20 @@ export function DeployButtonEnhanced({
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="deploy-method">Deployment Method</Label>
-                <Select
-                  value={deployMethod}
-                  onValueChange={(value: DeployMethod) =>
-                    setDeployMethod(value)
-                  }
-                >
-                  <SelectTrigger id="deploy-method">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="github-vercel">
-                      <div className="flex items-center gap-2">
-                        <GitBranch className="h-4 w-4" />
-                        <div>
-                          <div className="font-medium">GitHub + Vercel ✨</div>
-                          <div className="text-xs text-muted-foreground">
-                            Full code on GitHub, auto-deploy to Vercel
-                          </div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="v0">
-                      <div className="flex items-center gap-2">
-                        <Rocket className="h-4 w-4" />
-                        <div>
-                          <div className="font-medium">Via v0 (Full Deployment)</div>
-                          <div className="text-xs text-muted-foreground">
-                            Deploys actual source code files
-                          </div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="vercel-direct">
-                      <div className="flex items-center gap-2">
-                        <Zap className="h-4 w-4" />
-                        <div>
-                          <div className="font-medium">Direct API (Redirect Only)</div>
-                          <div className="text-xs text-muted-foreground">
-                            Creates redirect to v0 preview
-                          </div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="repo-name">
+                  Repository Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="repo-name"
+                  placeholder={`my-app-${chatId.slice(0, 6)}`}
+                  value={repoName}
+                  onChange={(e) => setRepoName(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Choose a unique name for your GitHub repository
+                </p>
               </div>
-
-              {deployMethod === 'github-vercel' && (
-                <div className="space-y-2">
-                  <Label htmlFor="repo-name">
-                    Repository Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="repo-name"
-                    placeholder={`my-app-${chatId.slice(0, 6)}`}
-                    value={repoName}
-                    onChange={(e) => setRepoName(e.target.value)}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Choose a unique name for your GitHub repository
-                  </p>
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="project-name">
@@ -381,28 +260,6 @@ export function DeployButtonEnhanced({
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                 />
-              </div>
-
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <p className="text-xs text-blue-800 dark:text-blue-200">
-                  {deployMethod === 'github-vercel' ? (
-                    <>
-                      <strong>✨ GitHub + Vercel (Recommended):</strong> Full production setup!
-                      Code on GitHub with version control + automatic Vercel deployment.
-                      Requires GITHUB_TOKEN and VERCEL_TOKEN in .env.local
-                    </>
-                  ) : deployMethod === 'v0' ? (
-                    <>
-                      <strong>✅ Via v0:</strong> Full source code deployment.
-                      Requires Vercel connected on v0.dev. Deploys actual React/Next.js files.
-                    </>
-                  ) : (
-                    <>
-                      <strong>⚠️ Direct API (Beta):</strong> Creates redirect to v0's hosted version.
-                      Not a full code deployment. For production, use "GitHub + Vercel" method.
-                    </>
-                  )}
-                </p>
               </div>
             </div>
           )}
