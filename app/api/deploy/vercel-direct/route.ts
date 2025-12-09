@@ -57,10 +57,11 @@ export async function POST(request: NextRequest) {
     if (session?.userId) {
       const ownership = await getChatOwnership({ v0ChatId: chatId })
 
-      if (!ownership || ownership.user_id !== session.user.id) {
+      // Shared data mode - any authenticated user can deploy
+      if (!ownership) {
         return NextResponse.json(
-          { error: 'You do not have permission to deploy this chat' },
-          { status: 403 },
+          { error: 'Chat not found' },
+          { status: 404 },
         )
       }
     }
