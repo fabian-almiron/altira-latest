@@ -1,4 +1,4 @@
-import type { UserType } from '@/app/(auth)/auth'
+type UserType = 'guest' | 'user'
 
 interface Entitlements {
   maxMessagesPerDay: number
@@ -15,7 +15,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
   /*
    * For users with an account
    */
-  regular: {
+  user: {
     maxMessagesPerDay: 50,
   },
 }

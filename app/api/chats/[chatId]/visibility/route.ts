@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from 'v0-sdk'
-import { auth } from '@/app/(auth)/auth'
+import { getClerkAuth } from '@/lib/clerk-auth'
 import { getChatOwnership } from '@/lib/db/queries'
 
 // Create v0 client with custom baseUrl if V0_API_URL is set
@@ -13,10 +13,10 @@ export async function PATCH(
   { params }: { params: Promise<{ chatId: string }> },
 ) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
     const { chatId } = await params
 
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 },

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useUser } from '@clerk/nextjs'
 import {
   Eye,
   EyeOff,
@@ -88,7 +88,7 @@ const getPrivacyDisplayName = (privacy: string) => {
 export function ChatSelector() {
   const router = useRouter()
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { user, isSignedIn } = useUser()
   const [chats, setChats] = useState<Chat[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
@@ -112,7 +112,7 @@ export function ChatSelector() {
 
   // Fetch user's chats
   useEffect(() => {
-    if (!session?.user?.id) return
+    if (!isSignedIn) return
 
     const fetchChats = async () => {
       setIsLoading(true)
@@ -130,7 +130,7 @@ export function ChatSelector() {
     }
 
     fetchChats()
-  }, [session?.user?.id])
+  }, [isSignedIn])
 
   // Fetch client info for current chat
   useEffect(() => {
@@ -287,7 +287,7 @@ export function ChatSelector() {
   }
 
   // Don't show if user is not authenticated
-  if (!session?.user?.id) return null
+  if (!isSignedIn) return null
 
   const currentChat = currentChatId
     ? chats.find((c) => c.id === currentChatId)

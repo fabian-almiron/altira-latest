@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from 'v0-sdk'
-import { auth } from '@/app/(auth)/auth'
+import { getClerkAuth } from '@/lib/clerk-auth'
 
 // Create v0 client
 const v0 = createClient(
@@ -9,9 +9,9 @@ const v0 = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/app/(auth)/auth'
+import { getClerkAuth } from '@/lib/clerk-auth'
 import { createChatOwnership, createAnonymousChatLog, getUserById } from '@/lib/db/queries'
 
 function getClientIP(request: NextRequest): string {
@@ -20,7 +20,7 @@ function getClientIP(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
     const { chatId, clientId, websiteName } = await request.json()
 
     if (!chatId) {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (session?.user?.id) {
+    if (session?.userId) {
       // Authenticated user - check if user exists first
       const userExists = await getUserById(session.user.id)
       

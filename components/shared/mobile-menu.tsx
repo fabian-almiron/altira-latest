@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useUser } from '@clerk/nextjs'
 import { Menu, X, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { GitHubIcon, VercelIcon } from '@/components/ui/icons'
@@ -25,7 +25,7 @@ export function MobileMenu({ onInfoDialogOpen }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { isSignedIn } = useUser()
   const isHomepage = pathname === '/'
 
   const handleLogoClick = (e: React.MouseEvent) => {
@@ -116,7 +116,7 @@ export function MobileMenu({ onInfoDialogOpen }: MobileMenuProps) {
               {/* Menu content */}
               <div className="flex-1 overflow-y-auto p-4 pt-16 space-y-4">
                 {/* Chat selector for authenticated users */}
-                {session?.user?.id && (
+                {isSignedIn && (
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-muted-foreground">
                       Your Chats

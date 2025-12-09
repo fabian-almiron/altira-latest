@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/app/(auth)/auth'
+import { getClerkAuth } from '@/lib/clerk-auth'
 import { getChatOwnership } from '@/lib/db/queries'
 
 /**
@@ -8,7 +8,7 @@ import { getChatOwnership } from '@/lib/db/queries'
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
     const { searchParams } = new URL(request.url)
     const chatId = searchParams.get('chatId')
 
@@ -29,13 +29,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if user owns this chat (if authenticated)
-    if (session?.user?.id && ownership.user_id !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 },
-      )
-    }
+    // Allow all authenticated users to view deployment info (shared data mode)
 
     // Return deployment info
     return NextResponse.json({

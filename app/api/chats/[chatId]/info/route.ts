@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/app/(auth)/auth'
+import { getClerkAuth } from '@/lib/clerk-auth'
 import { getChatOwnership, getClientById } from '@/lib/db/queries'
 
 export async function GET(
@@ -7,9 +7,9 @@ export async function GET(
   { params }: { params: Promise<{ chatId: string }> }
 ) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 },

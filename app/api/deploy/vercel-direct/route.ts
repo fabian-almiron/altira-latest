@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from 'v0-sdk'
-import { auth } from '@/app/(auth)/auth'
+import { getClerkAuth } from '@/lib/clerk-auth'
 import { getChatOwnership } from '@/lib/db/queries'
 
 // Create v0 client
@@ -31,7 +31,7 @@ function sanitizeProjectName(name: string): string {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
     const { chatId, projectName, teamId } = await request.json()
 
     if (!chatId) {
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check ownership if user is authenticated
-    if (session?.user?.id) {
+    if (session?.userId) {
       const ownership = await getChatOwnership({ v0ChatId: chatId })
 
       if (!ownership || ownership.user_id !== session.user.id) {

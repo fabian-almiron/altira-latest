@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getClerkAuth } from '@/lib/clerk-auth'
 import db from '@/lib/db/connection'
 import { chat_ownerships, clients } from '@/lib/db/schema'
-import { desc } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 
 export async function GET() {
   try {
