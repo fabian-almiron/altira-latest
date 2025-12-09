@@ -535,8 +535,8 @@ export async function POST(request: NextRequest) {
     // ========================================
     console.log('💾 Step 5: Saving deployment info to database...')
     
-    // Extract deployment URL (handle different response formats)
-    const deployUrl = deployment.url || deployment.alias?.[0] || null
+    // Extract deployment URL (prefer alias/domain over long deployment URL)
+    const deployUrl = deployment.alias?.[0] || deployment.url || null
     const deploymentUrl = deployUrl ? `https://${deployUrl}` : null
     const vercelDashboardUrl = `https://vercel.com/${vercelProject.accountId}/${vercelProject.name}`
     
