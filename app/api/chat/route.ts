@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, ChatDetail } from 'v0-sdk'
-import { auth } from '@/app/(auth)/auth'
+import { getClerkAuth } from '@/lib/clerk-auth'
 import { createChatOwnership, getChatCountByUserId } from '@/lib/db/queries'
 import { entitlementsByUserType } from '@/lib/entitlements'
 import { ChatSDKError } from '@/lib/errors'
@@ -12,10 +12,10 @@ const v0 = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
     // Require authentication - reject all requests without a valid session
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Authentication required', message: 'You must be logged in to use the chat.' },
         { status: 401 },
@@ -34,11 +34,11 @@ export async function POST(request: NextRequest) {
 
     // Authenticated user rate limiting
     const chatCount = await getChatCountByUserId({
-      userId: session.user.id,
+      userId: session.userId,
       differenceInHours: 24,
     })
 
-    const userType = session.user.type
+    const userType = 'user' // Default user type for Clerk users
     if (chatCount >= entitlementsByUserType[userType].maxMessagesPerDay) {
       return new ChatSDKError('rate_limit:chat').toResponse()
     }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       message,
       chatId,
       streaming,
-      userId: session.user.id,
+      userId: session.userId,
     })
 
     console.log('Using baseUrl:', process.env.V0_API_URL || 'default')
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
         // Create ownership mapping for authenticated user
         await createChatOwnership({
           v0ChatId: chatDetail.id,
-          userId: session.user.id,
+          userId: session.userId,
         })
         console.log('Chat ownership created:', chatDetail.id)
       } catch (error) {

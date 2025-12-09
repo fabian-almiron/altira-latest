@@ -94,8 +94,16 @@ export function ChatMessages({
             </Message>
           ))}
           {isLoading && (
-            <div className="flex justify-center py-4">
-              <Loader size={16} className="text-gray-500 dark:text-gray-400" />
+            <div className="flex flex-col items-center justify-center py-8 px-4">
+              <div className="relative">
+                <Loader size={24} className="text-blue-600 dark:text-blue-400" />
+                <div className="absolute inset-0 animate-ping opacity-20">
+                  <Loader size={24} className="text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 font-medium animate-pulse">
+                Generating your design...
+              </p>
             </div>
           )}
         </ConversationContent>

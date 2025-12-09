@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^2.0.22",
+    "@clerk/nextjs": "^6.36.1",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -36,7 +37,6 @@
     "lucide-react": "^0.540.0",
     "nanoid": "^5.1.5",
     "next": "16.0.8",
-    "next-auth": "5.0.0-beta.25",
     "postgres": "^3.4.7",
     "react": "19.1.2",
     "react-dom": "19.1.2",

@@ -26,7 +26,6 @@ import { ChatInput } from '@/components/chat/chat-input'
 import { PreviewPanel } from '@/components/chat/preview-panel'
 import { ResizableLayout } from '@/components/shared/resizable-layout'
 import { BottomToolbar } from '@/components/shared/bottom-toolbar'
-import { ExportHint } from '@/components/chat/export-hint'
 
 // Component that uses useSearchParams - needs to be wrapped in Suspense
 function SearchParamsHandler({ onReset }: { onReset: () => void }) {
@@ -484,10 +483,6 @@ export function HomeClient() {
                     onChatData={handleChatData}
                     onStreamingStarted={() => setIsLoading(false)}
                   />
-                  <ExportHint
-                    chatId={currentChatId}
-                    show={!isLoading && currentChat?.demo !== undefined}
-                  />
                 </div>
 
                 <ChatInput
@@ -523,16 +518,23 @@ export function HomeClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      {/* Handle search params with Suspense boundary */}
-      <Suspense fallback={null}>
-        <SearchParamsHandler onReset={handleReset} />
-      </Suspense>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 opacity-30 dark:opacity-20">
+        <div className="absolute inset-0 bg-linear-to-br from-blue-400/20 via-purple-400/20 to-pink-400/20 dark:from-blue-600/30 dark:via-purple-600/30 dark:to-pink-600/30 animate-gradient-shift"></div>
+      </div>
+      
+      {/* Content wrapper with relative positioning */}
+      <div className="relative z-10 flex flex-col flex-1">
+        {/* Handle search params with Suspense boundary */}
+        <Suspense fallback={null}>
+          <SearchParamsHandler onReset={handleReset} />
+        </Suspense>
 
-      <AppHeader />
+        <AppHeader />
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        {/* Main Content */}
+        <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl w-full">
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -700,20 +702,8 @@ export function HomeClient() {
               />
             </Suggestions>
           </div>
-
-          {/* Footer */}
-          <div className="mt-8 md:mt-16 text-center text-sm text-muted-foreground">
-            <p>
-              Powered by{' '}
-              <Link
-                href="https://v0-sdk.dev"
-                className="text-foreground hover:underline"
-              >
-                v0 SDK
-              </Link>
-            </p>
-          </div>
         </div>
+      </div>
       </div>
     </div>
   )

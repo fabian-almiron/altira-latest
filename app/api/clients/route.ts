@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/app/(auth)/auth'
+import { getClerkAuth } from '@/lib/clerk-auth'
 import {
   createClient,
-  getClientsByUserId,
+  getAllClients,
   updateClient,
   deleteClient,
   getChatsByClientId,
@@ -10,16 +10,17 @@ import {
 
 export async function GET() {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 },
       )
     }
 
-    const clients = await getClientsByUserId({ userId: session.user.id })
+    // Get ALL clients (shared across all users)
+    const clients = await getAllClients()
     
     // Add website count for each client
     const clientsWithCounts = await Promise.all(
@@ -44,9 +45,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 },
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
       email,
       phone,
       company,
-      userId: session.user.id,
+      userId: session.userId,
     })
 
     if (!client) {
@@ -90,9 +91,9 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 },
@@ -129,9 +130,9 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 },

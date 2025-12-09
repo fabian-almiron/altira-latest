@@ -1,6 +1,7 @@
 'use client'
 
-import { signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,18 +12,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, User } from 'lucide-react'
-import { Session } from 'next-auth'
+import { LogOut, User, Settings } from 'lucide-react'
+import Link from 'next/link'
 
-interface UserNavProps {
-  session: Session | null
-}
+export function UserNav() {
+  const { user, isSignedIn } = useUser()
+  const { signOut } = useClerk()
+  const router = useRouter()
 
-export function UserNav({ session }: UserNavProps) {
-  const initials =
-    session?.user?.email?.split('@')[0]?.slice(0, 2)?.toUpperCase() || 'U'
+  const initials = user?.emailAddresses[0]?.emailAddress
+    ?.split('@')[0]
+    ?.slice(0, 2)
+    ?.toUpperCase() || 'U'
 
-  const isSignedOut = !session
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/sign-in')
+  }
 
   return (
     <DropdownMenu>
@@ -30,7 +36,7 @@ export function UserNav({ session }: UserNavProps) {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarFallback className="bg-primary text-primary-foreground">
-              {isSignedOut ? <User className="h-4 w-4" /> : initials}
+              {!isSignedIn ? <User className="h-4 w-4" /> : initials}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -39,42 +45,48 @@ export function UserNav({ session }: UserNavProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {isSignedOut ? 'Not signed in' : 'User'}
+              {!isSignedIn ? 'Not signed in' : user?.fullName || 'User'}
             </p>
-            {session?.user?.email && (
+            {user?.emailAddresses[0]?.emailAddress && (
               <p className="text-xs leading-none text-muted-foreground">
-                {session.user.email}
+                {user.emailAddresses[0].emailAddress}
               </p>
             )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {isSignedOut && (
+        {!isSignedIn && (
           <>
             <DropdownMenuItem asChild>
-              <a href="/register" className="cursor-pointer">
+              <Link href="/sign-up" className="cursor-pointer">
                 <span>Create Account</span>
-              </a>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <a href="/login" className="cursor-pointer">
+              <Link href="/sign-in" className="cursor-pointer">
                 <span>Sign In</span>
-              </a>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>
         )}
-        {!isSignedOut && (
-          <DropdownMenuItem
-            onClick={async () => {
-              // Clear any local session data first
-              await signOut({ callbackUrl: '/login', redirect: true })
-            }}
-            className="cursor-pointer"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Sign out</span>
-          </DropdownMenuItem>
+        {isSignedIn && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link href="/account" className="cursor-pointer flex items-center">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Account Settings</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              className="cursor-pointer"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sign out</span>
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

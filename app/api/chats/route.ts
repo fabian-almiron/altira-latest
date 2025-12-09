@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from 'v0-sdk'
-import { auth } from '@/app/(auth)/auth'
-import { getChatOwnershipsWithNamesByUserId, getUserById } from '@/lib/db/queries'
+import { getClerkAuth } from '@/lib/clerk-auth'
+import { getAllChatOwnershipsWithNames } from '@/lib/db/queries'
 
 // Create v0 client with custom baseUrl if V0_API_URL is set
 const v0 = createClient(
@@ -10,53 +10,43 @@ const v0 = createClient(
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
     // Anonymous users don't have saved chats
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json({ data: [] })
     }
 
-    console.log('Fetching chats for user:', session.user.id)
+    console.log('Fetching ALL chats (shared across all users)')
 
-    // Check if user exists in database
-    const userExists = await getUserById(session.user.id)
-    if (!userExists) {
-      console.warn('Session user ID does not exist in database:', session.user.id)
-      return NextResponse.json({ 
-        data: [], 
-        warning: 'Invalid session, please sign out and sign in again' 
-      })
-    }
+    // Get ALL chat ownerships (shared across all users)
+    const allChatOwnerships = await getAllChatOwnershipsWithNames()
 
-    // Get user's chat ownerships with website names
-    const userChatOwnerships = await getChatOwnershipsWithNamesByUserId({ userId: session.user.id })
-
-    if (userChatOwnerships.length === 0) {
+    if (allChatOwnerships.length === 0) {
       return NextResponse.json({ data: [] })
     }
 
     // Create a map of chat IDs to website names
     const chatIdToWebsiteName = new Map(
-      userChatOwnerships.map(ownership => [ownership.v0ChatId, ownership.websiteName])
+      allChatOwnerships.map(ownership => [ownership.v0ChatId, ownership.websiteName])
     )
 
-    const userChatIds = userChatOwnerships.map(o => o.v0ChatId)
+    const allChatIds = allChatOwnerships.map(o => o.v0ChatId)
 
     // Fetch actual chat data from v0 API
     const allChats = await v0.chats.find()
 
-    // Filter to only include chats owned by this user and override name with website name
-    const userChats = (allChats.data?.filter((chat) => userChatIds.includes(chat.id)) || [])
+    // Show ALL chats to all users and override name with website name
+    const sharedChats = (allChats.data?.filter((chat) => allChatIds.includes(chat.id)) || [])
       .map(chat => ({
         ...chat,
         // Override the chat name with the website name (project name) from our database
         name: chatIdToWebsiteName.get(chat.id) || chat.name,
       }))
 
-    console.log('Chats fetched successfully:', userChats.length, 'chats')
+    console.log('Chats fetched successfully:', sharedChats.length, 'chats (shared across all users)')
 
-    return NextResponse.json({ data: userChats })
+    return NextResponse.json({ data: sharedChats })
   } catch (error) {
     console.error('Chats fetch error:', error)
 

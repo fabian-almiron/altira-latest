@@ -124,3 +124,32 @@
 button {
   cursor: pointer;
 }
+
+/* Subtle animated gradient background */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+    transform: scale(1);
+  }
+  25% {
+    background-position: 50% 75%;
+    transform: scale(1.05);
+  }
+  50% {
+    background-position: 100% 50%;
+    transform: scale(1);
+  }
+  75% {
+    background-position: 50% 25%;
+    transform: scale(1.05);
+  }
+  100% {
+    background-position: 0% 50%;
+    transform: scale(1);
+  }
+}
+
+.animate-gradient-shift {
+  background-size: 400% 400%;
+  animation: gradient-shift 20s ease infinite;
+}

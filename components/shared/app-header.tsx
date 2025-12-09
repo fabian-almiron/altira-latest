@@ -7,7 +7,6 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { ChatSelector } from './chat-selector'
 import { MobileMenu } from './mobile-menu'
 import { DeploymentInfo } from './deployment-info'
-import { useSession } from 'next-auth/react'
 import { UserNav } from '@/components/user-nav'
 import { Button } from '@/components/ui/button'
 import { VercelIcon, GitHubIcon } from '@/components/ui/icons'
@@ -29,29 +28,24 @@ interface AppHeaderProps {
 // Component that uses useSearchParams - needs to be wrapped in Suspense
 function SearchParamsHandler() {
   const searchParams = useSearchParams()
-  const { update } = useSession()
 
-  // Force session refresh when redirected after auth
+  // Clean up URL parameters after auth redirect
   useEffect(() => {
     const shouldRefresh = searchParams.get('refresh') === 'session'
 
     if (shouldRefresh) {
-      // Force session update
-      update()
-
       // Clean up URL without causing navigation
       const url = new URL(window.location.href)
       url.searchParams.delete('refresh')
       window.history.replaceState({}, '', url.pathname)
     }
-  }, [searchParams, update])
+  }, [searchParams])
 
   return null
 }
 
 export function AppHeader({ className = '' }: AppHeaderProps) {
   const pathname = usePathname()
-  const { data: session } = useSession()
   const isHomepage = pathname === '/'
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false)
 
@@ -119,12 +113,12 @@ export function AppHeader({ className = '' }: AppHeaderProps) {
                 vercelDeploymentUrl={deploymentInfo.vercelDeploymentUrl}
               />
             )}
-            <UserNav session={session} />
+            <UserNav />
           </div>
 
           {/* Mobile right side - Only menu button and user avatar */}
           <div className="flex lg:hidden items-center gap-2">
-            <UserNav session={session} />
+            <UserNav />
             <MobileMenu onInfoDialogOpen={() => setIsInfoDialogOpen(true)} />
           </div>
         </div>

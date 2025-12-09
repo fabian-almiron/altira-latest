@@ -43,8 +43,15 @@ export function NewChatForm() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 lg:p-8">
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 lg:p-8">
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 opacity-30 dark:opacity-20">
+        <div className="absolute inset-0 bg-linear-to-br from-blue-400/20 via-purple-400/20 to-pink-400/20 dark:from-blue-600/30 dark:via-purple-600/30 dark:to-pink-600/30 animate-gradient-shift"></div>
+      </div>
+      
+      {/* Form container */}
+      <div className="relative z-10 w-full max-w-2xl mx-auto p-6 lg:p-8">
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 lg:p-8 shadow-xl">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Create New Project
@@ -146,6 +153,7 @@ export function NewChatForm() {
             </Button>
           </div>
         </form>
+      </div>
       </div>
     </div>
   )

@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { StreamingProvider } from '@/contexts/streaming-context'
 import { SWRProvider } from '@/components/providers/swr-provider'
-import { SessionProvider } from '@/components/providers/session-provider'
+import { ClerkProvider } from '@clerk/nextjs'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -55,11 +55,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider>
+        <ClerkProvider>
           <SWRProvider>
             <StreamingProvider>{children}</StreamingProvider>
           </SWRProvider>
-        </SessionProvider>
+        </ClerkProvider>
       </body>
     </html>
   )

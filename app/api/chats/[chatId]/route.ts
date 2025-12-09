@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from 'v0-sdk'
-import { auth } from '@/app/(auth)/auth'
-import { getChatOwnership, getUserById, deleteChatOwnership } from '@/lib/db/queries'
+import { getClerkAuth } from '@/lib/clerk-auth'
+import { getChatOwnership, deleteChatOwnership } from '@/lib/db/queries'
 import db from '@/lib/db/connection'
 import { clients } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -16,7 +16,7 @@ export async function GET(
   { params }: { params: Promise<{ chatId: string }> },
 ) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
     const { chatId } = await params
 
     console.log('Fetching chat details for ID:', chatId)
@@ -28,29 +28,21 @@ export async function GET(
       )
     }
 
-    if (session?.user?.id) {
-      // Check if user exists in database
-      const userExists = await getUserById(session.user.id)
-      if (!userExists) {
-        console.warn('Session user ID does not exist in database:', session.user.id)
-        return NextResponse.json({ 
-          error: 'Invalid session, please sign out and sign in again' 
-        }, { status: 401 })
-      }
-
-      // Authenticated user - check ownership
+    if (session?.userId) {
+      // Authenticated user - allow access to ANY chat (shared data mode)
       const ownership = await getChatOwnership({ v0ChatId: chatId })
 
       if (!ownership) {
         return NextResponse.json({ error: 'Chat not found' }, { status: 404 })
       }
 
-      if (ownership.user_id !== session.user.id) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-      }
+      console.log('Authenticated user accessing shared chat:', chatId)
     } else {
-      // Anonymous user - allow access to any chat (they can only access via direct URL)
-      console.log('Anonymous access to chat:', chatId)
+      // Anonymous user not allowed
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 },
+      )
     }
 
     // Fetch chat details using v0 SDK
@@ -83,9 +75,9 @@ export async function DELETE(
   { params }: { params: Promise<{ chatId: string }> },
 ) {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 },
@@ -94,18 +86,16 @@ export async function DELETE(
 
     const { chatId } = await params
 
-    console.log('Deleting chat:', chatId, 'for user:', session.user.id)
+    console.log('Deleting chat:', chatId, 'by user:', session.userId)
 
-    // Check ownership
+    // Get chat ownership (but don't check if user owns it - all users can delete in shared mode)
     const ownership = await getChatOwnership({ v0ChatId: chatId })
 
     if (!ownership) {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 })
     }
 
-    if (ownership.user_id !== session.user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    console.log('Authenticated user deleting shared chat:', chatId)
 
     // Delete GitHub repository if it exists
     if (ownership.github_repo_url && process.env.GITHUB_TOKEN) {

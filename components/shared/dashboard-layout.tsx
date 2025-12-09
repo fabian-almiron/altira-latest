@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useUser, useClerk } from '@clerk/nextjs'
 import {
   LayoutDashboard,
   Users,
@@ -13,10 +13,10 @@ import {
   Menu,
   X,
   LogOut,
+  Settings,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -38,10 +38,13 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { user } = useUser()
+  const { signOut } = useClerk()
 
-  const initials =
-    session?.user?.email?.split('@')[0]?.slice(0, 2)?.toUpperCase() || 'U'
+  const initials = user?.emailAddresses[0]?.emailAddress
+    ?.split('@')[0]
+    ?.slice(0, 2)
+    ?.toUpperCase() || 'U'
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -113,6 +116,42 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
             </Link>
           </div>
+
+          {/* Mobile user profile */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex items-center">
+              <Avatar className="h-9 w-9">
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="ml-3 flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {user?.fullName || user?.emailAddresses[0]?.emailAddress?.split('@')[0] || 'User'}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {user?.emailAddresses[0]?.emailAddress}
+                </p>
+              </div>
+              <div className="flex items-center gap-1">
+                <Link href="/account" onClick={() => setSidebarOpen(false)}>
+                  <button
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    title="Account Settings"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </button>
+                </Link>
+                <button
+                  onClick={() => signOut()}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  title="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -175,19 +214,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Avatar>
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {session?.user?.email?.split('@')[0] || 'User'}
+                  {user?.fullName || user?.emailAddresses[0]?.emailAddress?.split('@')[0] || 'User'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {session?.user?.email}
+                  {user?.emailAddresses[0]?.emailAddress}
                 </p>
               </div>
-              <button
-                onClick={() => signOut({ callbackUrl: '/login' })}
-                className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                title="Sign out"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <Link href="/account">
+                  <button
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    title="Account Settings"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </button>
+                </Link>
+                <button
+                  onClick={() => signOut()}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  title="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

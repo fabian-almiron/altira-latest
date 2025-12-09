@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/app/(auth)/auth'
+import { getClerkAuth } from '@/lib/clerk-auth'
 import db from '@/lib/db/connection'
 import { chat_ownerships, clients } from '@/lib/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { desc } from 'drizzle-orm'
 
 export async function GET() {
   try {
-    const session = await auth()
+    const session = await getClerkAuth()
 
-    if (!session?.user?.id) {
+    if (!session?.userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 },

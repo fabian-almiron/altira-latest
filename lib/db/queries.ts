@@ -65,6 +65,44 @@ export async function createUser(
   }
 }
 
+export async function updateUserEmail({
+  userId,
+  newEmail,
+}: {
+  userId: string
+  newEmail: string
+}): Promise<User[]> {
+  try {
+    return await db
+      .update(users)
+      .set({ email: newEmail })
+      .where(eq(users.id, userId))
+      .returning()
+  } catch (error) {
+    console.error('Failed to update user email in database')
+    throw error
+  }
+}
+
+export async function updateUserPassword({
+  userId,
+  newPassword,
+}: {
+  userId: string
+  newPassword: string
+}): Promise<User[]> {
+  try {
+    return await db
+      .update(users)
+      .set({ password: newPassword })
+      .where(eq(users.id, userId))
+      .returning()
+  } catch (error) {
+    console.error('Failed to update user password in database')
+    throw error
+  }
+}
+
 // Chat ownership functions
 export async function createChatOwnership({
   v0ChatId,
@@ -144,6 +182,26 @@ export async function getChatOwnershipsWithNamesByUserId({
     return ownerships
   } catch (error) {
     console.error('Failed to get chat ownerships with names from database')
+    throw error
+  }
+}
+
+// Get ALL chat ownerships (shared across all users)
+export async function getAllChatOwnershipsWithNames(): Promise<
+  Array<{ v0ChatId: string; websiteName: string | null }>
+> {
+  try {
+    const ownerships = await db
+      .select({
+        v0ChatId: chat_ownerships.v0_chat_id,
+        websiteName: chat_ownerships.website_name,
+      })
+      .from(chat_ownerships)
+      .orderBy(desc(chat_ownerships.created_at))
+
+    return ownerships
+  } catch (error) {
+    console.error('Failed to get all chat ownerships from database')
     throw error
   }
 }
@@ -333,6 +391,19 @@ export async function getClientsByUserId({
       .orderBy(desc(clients.created_at))
   } catch (error) {
     console.error('Failed to get clients from database')
+    throw error
+  }
+}
+
+// Get ALL clients (shared across all users)
+export async function getAllClients(): Promise<Client[]> {
+  try {
+    return await db
+      .select()
+      .from(clients)
+      .orderBy(desc(clients.created_at))
+  } catch (error) {
+    console.error('Failed to get all clients from database')
     throw error
   }
 }
