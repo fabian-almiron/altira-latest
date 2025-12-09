@@ -2,11 +2,60 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from 'v0-sdk'
 import { auth } from '@/app/(auth)/auth'
 import { getChatOwnership } from '@/lib/db/queries'
-import { getTemplateFilesForExport } from '@/lib/export-templates'
+import { getTemplateFilesForExport, detectAndNormalizeFonts } from '@/lib/export-templates'
 
 const v0 = createClient(
   process.env.V0_API_URL ? { baseUrl: process.env.V0_API_URL } : {},
 )
+
+/**
+ * Validates and fixes incorrectly nested file paths
+ * Prevents components/ui/ui/ nesting issues
+ */
+function validateAndFixFilePaths(
+  tree: Array<{ path: string; mode: '100644'; type: 'blob'; content: string }>
+): Array<{ path: string; mode: '100644'; type: 'blob'; content: string }> {
+  return tree.map((item): { path: string; mode: '100644'; type: 'blob'; content: string } => {
+    let fixedPath = item.path
+    
+    // Fix double nesting: components/ui/ui/ -> components/ui/
+    if (fixedPath.includes('components/ui/ui/')) {
+      const originalPath = fixedPath
+      fixedPath = fixedPath.replace(/components\/ui\/ui\//g, 'components/ui/')
+      console.log(`🔧 Fixed nested path: ${originalPath} → ${fixedPath}`)
+    }
+    
+    // Fix any other duplicate directory patterns
+    const pathParts = fixedPath.split('/')
+    const seen = new Set<string>()
+    const fixedParts: string[] = []
+    
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      const part = pathParts[i]
+      // Check for consecutive duplicate directory names
+      if (i > 0 && part === pathParts[i - 1]) {
+        console.log(`🔧 Removed duplicate directory: ${part} in ${fixedPath}`)
+        continue // Skip duplicate
+      }
+      fixedParts.push(part)
+    }
+    // Always add the filename (last part)
+    fixedParts.push(pathParts[pathParts.length - 1])
+    
+    const finalPath = fixedParts.join('/')
+    
+    if (finalPath !== item.path) {
+      console.log(`🔧 Final path fix: ${item.path} → ${finalPath}`)
+    }
+    
+    return {
+      path: finalPath,
+      mode: item.mode,
+      type: item.type,
+      content: item.content
+    }
+  })
+}
 
 export async function POST(request: NextRequest) {
   let chatId: string = ''
@@ -153,16 +202,24 @@ export async function POST(request: NextRequest) {
 
     // 3. Create tree with all files (v0 files + template files)
     
-    // Get v0 files
+    // Get v0 files and normalize fonts in layout files
     const v0Files = chatDetails.files.map((file) => {
-      const filePath =
-        file.meta?.file || `file-${Date.now()}.${file.lang}`
+      const filePath: string =
+        (file.meta?.file as string) || `file-${Date.now()}.${file.lang}`
+
+      let content = file.source
+      
+      // If this is a layout file, detect and normalize fonts
+      if (filePath === 'app/layout.tsx' || filePath.endsWith('/layout.tsx')) {
+        console.log(`🔤 Processing font imports in ${filePath}`)
+        content = detectAndNormalizeFonts(content)
+      }
 
       return {
         path: filePath,
         mode: '100644' as const,
         type: 'blob' as const,
-        content: file.source,
+        content: content,
       }
     })
 
@@ -179,11 +236,16 @@ export async function POST(request: NextRequest) {
     }))
 
     // Combine both
-    const tree = [...v0Files, ...templateTree]
+    const combinedTree: Array<{ path: string; mode: '100644'; type: 'blob'; content: string }> = [...v0Files, ...templateTree]
     
     console.log(`Exporting ${v0Files.length} v0 files + ${templateTree.length} template files`)
     console.log(`📂 Template files being exported:`, templateTree.map(f => f.path))
-    console.log(`📂 UI component files:`, templateTree.filter(f => f.path.startsWith('components/ui/')).map(f => f.path))
+    console.log(`📂 UI component files (before validation):`, templateTree.filter(f => f.path.startsWith('components/ui/')).map(f => f.path))
+    
+    // Validate and fix any nested paths
+    const tree = validateAndFixFilePaths(combinedTree)
+    
+    console.log(`📂 UI component files (after validation):`, tree.filter(f => f.path.startsWith('components/ui/')).map(f => f.path))
 
     const treeResponse = await fetch(
       `https://api.github.com/repos/${repoData.full_name}/git/trees`,

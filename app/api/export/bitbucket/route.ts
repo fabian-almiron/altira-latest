@@ -2,11 +2,50 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from 'v0-sdk'
 import { auth } from '@/app/(auth)/auth'
 import { getChatOwnership } from '@/lib/db/queries'
-import { getTemplateFilesForExport } from '@/lib/export-templates'
+import { getTemplateFilesForExport, detectAndNormalizeFonts } from '@/lib/export-templates'
 
 const v0 = createClient(
   process.env.V0_API_URL ? { baseUrl: process.env.V0_API_URL } : {},
 )
+
+/**
+ * Validates and fixes incorrectly nested file paths
+ * Prevents components/ui/ui/ nesting issues
+ */
+function validateAndFixFilePath(filePath: string): string {
+  let fixedPath = filePath
+  
+  // Fix double nesting: components/ui/ui/ -> components/ui/
+  if (fixedPath.includes('components/ui/ui/')) {
+    const originalPath = fixedPath
+    fixedPath = fixedPath.replace(/components\/ui\/ui\//g, 'components/ui/')
+    console.log(`🔧 Fixed nested path: ${originalPath} → ${fixedPath}`)
+  }
+  
+  // Fix any other duplicate directory patterns
+  const pathParts = fixedPath.split('/')
+  const fixedParts: string[] = []
+  
+  for (let i = 0; i < pathParts.length - 1; i++) {
+    const part = pathParts[i]
+    // Check for consecutive duplicate directory names
+    if (i > 0 && part === pathParts[i - 1]) {
+      console.log(`🔧 Removed duplicate directory: ${part} in ${fixedPath}`)
+      continue // Skip duplicate
+    }
+    fixedParts.push(part)
+  }
+  // Always add the filename (last part)
+  fixedParts.push(pathParts[pathParts.length - 1])
+  
+  const finalPath = fixedParts.join('/')
+  
+  if (finalPath !== filePath) {
+    console.log(`🔧 Final path fix: ${filePath} → ${finalPath}`)
+  }
+  
+  return finalPath
+}
 
 export async function POST(request: NextRequest) {
   let chatId: string = ''
@@ -133,7 +172,15 @@ export async function POST(request: NextRequest) {
 
     // Push v0 files
     for (const file of chatDetails.files) {
-      const filePath: string = (file.meta?.file as string) || `file-${filesCreated.length}.${file.lang}`
+      let filePath: string = (file.meta?.file as string) || `file-${filesCreated.length}.${file.lang}`
+      filePath = validateAndFixFilePath(filePath)
+
+      // Normalize fonts in layout files
+      let content = file.source
+      if (filePath === 'app/layout.tsx' || filePath.endsWith('/layout.tsx')) {
+        console.log(`🔤 Processing font imports in ${filePath}`)
+        content = detectAndNormalizeFonts(content)
+      }
 
       try {
         // Commit file to Bitbucket
@@ -145,7 +192,7 @@ export async function POST(request: NextRequest) {
               Authorization: `Basic ${Buffer.from(`${bitbucketUsername}:${bitbucketAppPassword}`).toString('base64')}`,
             },
             body: new URLSearchParams({
-              [filePath]: file.source,
+              [filePath]: content,
               message: `Add ${filePath}`,
               branch: 'main',
             }),
@@ -167,7 +214,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Push template files
-    for (const [filePath, content] of Object.entries(templateFiles)) {
+    for (const [originalPath, content] of Object.entries(templateFiles)) {
+      const filePath = validateAndFixFilePath(originalPath)
       try {
         const commitResponse = await fetch(
           `https://api.bitbucket.org/2.0/repositories/${bitbucketWorkspace}/${repoName}/src`,

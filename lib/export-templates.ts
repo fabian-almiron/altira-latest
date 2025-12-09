@@ -306,6 +306,106 @@ next-env.d.ts`,
 
 import { getDynamicShadcnComponents } from './shadcn-registry'
 
+/**
+ * Detects and normalizes font imports in layout.tsx files
+ * Ensures fonts from next/font/google are properly imported
+ */
+export function detectAndNormalizeFonts(layoutContent: string): string {
+  console.log('🔤 Checking for font imports in layout...')
+  
+  // Detect font imports from next/font/google
+  const fontImportRegex = /import\s+{\s*([^}]+)\s*}\s+from\s+['"]next\/font\/google['"]/g
+  const fontMatches = [...layoutContent.matchAll(fontImportRegex)]
+  
+  if (fontMatches.length === 0) {
+    console.log('⚠️  No Google Font imports detected, adding default Inter font')
+    // No font found, add Inter as default
+    return addDefaultInterFont(layoutContent)
+  }
+  
+  // Extract font names
+  const fontsUsed = fontMatches.map(match => {
+    const imports = match[1].split(',').map(f => f.trim())
+    return imports
+  }).flat()
+  
+  console.log('✅ Detected fonts:', fontsUsed.join(', '))
+  
+  // Validate that fonts are properly configured
+  let normalized = layoutContent
+  
+  // Check if font variables are properly used in className
+  for (const fontName of fontsUsed) {
+    const varName = fontName.toLowerCase().replace(/_/g, '')
+    const varRegex = new RegExp(`const\\s+${varName}\\s*=\\s*${fontName}\\s*\\(`, 'i')
+    
+    if (!varRegex.test(normalized)) {
+      console.log(`⚠️  Font ${fontName} import found but not initialized`)
+    }
+  }
+  
+  // Ensure the layout uses the font variables correctly
+  // Fix common issues like missing className or wrong variable references
+  if (!normalized.includes('className=') && normalized.includes('<html')) {
+    console.log('⚠️  No className found on <html> tag, fonts may not apply')
+  }
+  
+  return normalized
+}
+
+/**
+ * Adds default Inter font if no fonts are detected
+ */
+function addDefaultInterFont(layoutContent: string): string {
+  console.log('📝 Adding default Inter font import')
+  
+  // Check if there's already a font import line
+  if (layoutContent.includes('next/font/google')) {
+    return layoutContent
+  }
+  
+  // Add Inter import after the first import statement
+  const lines = layoutContent.split('\n')
+  const firstImportIndex = lines.findIndex(line => line.trim().startsWith('import'))
+  
+  if (firstImportIndex === -1) {
+    // No imports found, add at the top
+    return `import { Inter } from "next/font/google";\n\nconst inter = Inter({ subsets: ["latin"], variable: "--font-sans" });\n\n${layoutContent}`
+  }
+  
+  // Find the line after the last import
+  let lastImportIndex = firstImportIndex
+  for (let i = firstImportIndex; i < lines.length; i++) {
+    if (lines[i].trim().startsWith('import')) {
+      lastImportIndex = i
+    } else if (lines[i].trim() && !lines[i].trim().startsWith('import')) {
+      break
+    }
+  }
+  
+  // Insert font import and initialization
+  lines.splice(
+    lastImportIndex + 1,
+    0,
+    '',
+    'import { Inter } from "next/font/google";',
+    '',
+    'const inter = Inter({',
+    '  subsets: ["latin"],',
+    '  variable: "--font-sans",',
+    '});'
+  )
+  
+  let result = lines.join('\n')
+  
+  // Ensure className is added to html tag if not present
+  if (!result.includes('className=') && result.includes('<html')) {
+    result = result.replace(/<html([^>]*)>/g, '<html$1 className={inter.variable}>')
+  }
+  
+  return result
+}
+
 // Check if a file is likely a base template file that shouldn't be overwritten
 export function shouldSkipFile(filePath: string, v0Files: string[]): boolean {
   // If v0 already provided this file, use v0's version

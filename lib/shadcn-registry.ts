@@ -135,6 +135,35 @@ export async function fetchShadcnComponents(componentNames: string[]): Promise<R
 }
 
 /**
+ * Normalizes a file path to prevent incorrect nesting
+ * Ensures UI components are in components/ui/ not components/ui/ui/
+ */
+export function normalizeComponentPath(filePath: string): string {
+  // Remove leading slashes
+  let normalized = filePath.replace(/^\/+/, '')
+  
+  // Fix double nesting: components/ui/ui/ -> components/ui/
+  normalized = normalized.replace(/components\/ui\/ui\//g, 'components/ui/')
+  
+  // Fix if path is just ui/component.tsx -> components/ui/component.tsx
+  if (normalized.startsWith('ui/') && !normalized.startsWith('components/')) {
+    normalized = `components/${normalized}`
+  }
+  
+  // Ensure components/ui/ prefix for UI components
+  if (!normalized.startsWith('components/') && (normalized.endsWith('.tsx') || normalized.endsWith('.ts'))) {
+    // Check if it's likely a UI component file
+    if (!normalized.includes('/')) {
+      normalized = `components/ui/${normalized}`
+    }
+  }
+  
+  console.log(`🔧 Normalized path: ${filePath} → ${normalized}`)
+  
+  return normalized
+}
+
+/**
  * Converts shadcn registry format to our export format
  */
 export function convertShadcnComponentToFiles(component: ShadcnRegistryComponent): Record<string, string> {
@@ -165,9 +194,12 @@ export function convertShadcnComponentToFiles(component: ShadcnRegistryComponent
 
     // Convert registry path to our format
     // e.g., "components/ui/button.tsx" stays the same
-    const filePath = fileName.startsWith('components/') 
+    let filePath = fileName.startsWith('components/') 
       ? fileName 
       : `components/ui/${fileName}`
+    
+    // Normalize to prevent incorrect nesting
+    filePath = normalizeComponentPath(filePath)
 
     console.log(`  → final path: ${filePath}`)
     files[filePath] = fileContent
