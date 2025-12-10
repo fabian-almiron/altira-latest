@@ -18,6 +18,11 @@ export default clerkMiddleware(async (auth, request) => {
     return new Response('pong', { status: 200 })
   }
 
+  // Disable sign-up page - redirect to sign-in
+  if (pathname.startsWith('/sign-up')) {
+    return NextResponse.redirect(new URL('/sign-in', request.url))
+  }
+
   // If accessing homepage without authentication, redirect to sign-in
   if (pathname === '/' && !userId) {
     return NextResponse.redirect(new URL('/sign-in', request.url))
