@@ -1,10 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus, Globe, Trash2, ExternalLink } from 'lucide-react'
+import { Plus, Globe, ExternalLink } from 'lucide-react'
 import useSWR from 'swr'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
 
 interface V0Chat {
   id: string
@@ -24,45 +23,12 @@ interface ChatsResponse {
 }
 
 export function DashboardContent() {
-  const { data, error, isLoading, mutate } = useSWR<ChatsResponse>('/api/chats')
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const { data, error, isLoading } = useSWR<ChatsResponse>('/api/chats')
   const chats = data?.data || []
 
   const getFirstUserMessage = (chat: V0Chat) => {
     const firstUserMessage = chat.messages?.find((msg) => msg.role === 'user')
     return firstUserMessage?.content || 'Untitled Website'
-  }
-
-  const handleDelete = async (chatId: string, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    if (!confirm('Are you sure you want to delete this website?')) {
-      return
-    }
-
-    setDeletingId(chatId)
-    try {
-      const response = await fetch(`/api/chat/delete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ chatId }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete chat')
-      }
-
-      // Refresh the chat list
-      mutate()
-    } catch (error) {
-      console.error('Error deleting chat:', error)
-      alert('Failed to delete website. Please try again.')
-    } finally {
-      setDeletingId(null)
-    }
   }
 
   return (
@@ -216,7 +182,7 @@ export function DashboardContent() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center ml-4 space-x-2">
+                    <div className="flex items-center ml-4">
                       <button
                         onClick={(e) => {
                           e.preventDefault()
@@ -227,18 +193,6 @@ export function DashboardContent() {
                         title="Open in new tab"
                       >
                         <ExternalLink className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={(e) => handleDelete(chat.id, e)}
-                        disabled={deletingId === chat.id}
-                        className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-                        title="Delete website"
-                      >
-                        {deletingId === chat.id ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
                       </button>
                     </div>
                   </div>

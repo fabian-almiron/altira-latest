@@ -14,6 +14,9 @@ import {
   X,
   LogOut,
   Settings,
+  FileText,
+  BarChart3,
+  Globe,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -28,7 +31,11 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Clients', href: '/clients', icon: Users },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Forms', href: '/forms', icon: FileText },
+  { name: 'Domains', href: '/domains', icon: Globe },
   { name: 'Resource Center', href: '/resources', icon: BookOpen },
+  { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 interface DashboardLayoutProps {
