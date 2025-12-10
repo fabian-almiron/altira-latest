@@ -482,7 +482,10 @@ export async function POST(request: NextRequest) {
     if (!deployment) {
       console.log('⚠️ Deployment trigger failed, but project is set up')
       
-      const vercelDashboardUrl = `https://vercel.com/${vercelProject.accountId}/${vercelProject.name}`
+      // Use correct dashboard URL format
+      const vercelDashboardUrl = vercelProject.link?.org
+        ? `https://vercel.com/${vercelProject.link.org}/${vercelProject.name}`
+        : `https://vercel.com/${vercelProject.name}`
       
       // Save partial deployment info to database
       try {
@@ -535,10 +538,20 @@ export async function POST(request: NextRequest) {
     // ========================================
     console.log('💾 Step 5: Saving deployment info to database...')
     
-    // Extract deployment URL (prefer alias/domain over long deployment URL)
-    const deployUrl = deployment.alias?.[0] || deployment.url || null
-    const deploymentUrl = deployUrl ? `https://${deployUrl}` : null
-    const vercelDashboardUrl = `https://vercel.com/${vercelProject.accountId}/${vercelProject.name}`
+    // Use the production domain (projectName.vercel.app) instead of branch-specific URL
+    // This ensures users always get the main production URL, not the git branch URL
+    const productionDomain = `${vercelProject.name}.vercel.app`
+    const deploymentUrl = `https://${productionDomain}`
+    
+    // Correct Vercel dashboard URL format (without accountId)
+    const vercelDashboardUrl = vercelProject.link?.org
+      ? `https://vercel.com/${vercelProject.link.org}/${vercelProject.name}`
+      : `https://vercel.com/${vercelProject.name}`
+    
+    console.log('📋 URLs:', {
+      production: deploymentUrl,
+      dashboard: vercelDashboardUrl
+    })
     
     // Save deployment information to database
     try {
@@ -548,7 +561,7 @@ export async function POST(request: NextRequest) {
         githubRepoUrl: githubRepoUrl,
         vercelProjectId: vercelProject.id,
         vercelProjectUrl: vercelDashboardUrl,
-        vercelDeploymentUrl: deploymentUrl || vercelDashboardUrl,
+        vercelDeploymentUrl: deploymentUrl,
         deploymentStatus: 'deployed',
       })
       console.log('✅ Deployment info saved to database')
@@ -575,14 +588,14 @@ export async function POST(request: NextRequest) {
         id: vercelProject.id,
         name: vercelProject.name,
         framework: 'nextjs',
-        dashboardUrl: `https://vercel.com/${vercelProject.accountId}/${vercelProject.name}`,
+        dashboardUrl: vercelDashboardUrl,
       },
       deployment: {
         id: deployment.id || deployment.uid,
-        url: deployUrl,
+        url: `${vercelProject.name}.vercel.app`,
         readyState: deployment.readyState || deployment.state || 'BUILDING',
         deploymentUrl: deploymentUrl,
-        inspectorUrl: deployment.inspectorUrl || `https://vercel.com/${vercelProject.accountId}/${vercelProject.name}`,
+        inspectorUrl: deployment.inspectorUrl || vercelDashboardUrl,
       },
       filesCreated: tree.length,
       steps: {
