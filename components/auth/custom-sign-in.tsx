@@ -124,7 +124,7 @@ export function CustomSignIn() {
               )}
 
               <div className="space-y-3">
-                <Label htmlFor="code" className="text-base font-semibold text-gray-700 dark:text-gray-200">
+                <Label htmlFor="code" className="text-lg font-semibold text-gray-700 dark:text-gray-200">
                   Verification code
                 </Label>
                 <Input
@@ -134,7 +134,7 @@ export function CustomSignIn() {
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="000000"
-                  className="h-16 text-center text-2xl tracking-[0.5em] font-bold border-2 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
+                  className="h-20 text-center text-4xl tracking-[0.5em] font-bold border-2 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
                   maxLength={6}
                   disabled={isLoading}
                 />
