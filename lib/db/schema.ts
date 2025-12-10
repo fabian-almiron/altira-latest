@@ -10,9 +10,9 @@ import {
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  email: varchar('email', { length: 64 }).notNull(),
-  password: varchar('password', { length: 64 }),
+  id: varchar('id', { length: 255 }).primaryKey().notNull(), // Clerk user ID (e.g., user_xxx)
+  email: varchar('email', { length: 255 }).notNull(),
+  password: varchar('password', { length: 255 }),
   created_at: timestamp('created_at').notNull().defaultNow(),
 })
 
@@ -27,7 +27,7 @@ export const clients = pgTable('clients', {
   phone: varchar('phone', { length: 50 }),
   company: varchar('company', { length: 255 }),
   status: varchar('status', { length: 20 }).notNull().default('active'), // 'active' | 'inactive'
-  user_id: uuid('user_id')
+  user_id: varchar('user_id', { length: 255 })
     .notNull()
     .references(() => users.id),
   created_at: timestamp('created_at').notNull().defaultNow(),
