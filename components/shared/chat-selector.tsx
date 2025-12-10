@@ -104,6 +104,7 @@ export function ChatSelector() {
   const [isDuplicatingChat, setIsDuplicatingChat] = useState(false)
   const [isChangingVisibility, setIsChangingVisibility] = useState(false)
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   // Get current chat ID if on a chat page
   const currentChatId = pathname?.startsWith('/chats/')
@@ -132,12 +133,16 @@ export function ChatSelector() {
     fetchChats()
   }, [isSignedIn])
 
-  // Fetch client info for current chat
+  // Fetch client info for current chat with retry logic
   useEffect(() => {
     if (!currentChatId) {
       setClientInfo(null)
       return
     }
+
+    let retryCount = 0
+    const maxRetries = 5
+    let timeoutId: NodeJS.Timeout
 
     const fetchClientInfo = async () => {
       try {
@@ -145,13 +150,43 @@ export function ChatSelector() {
         if (response.ok) {
           const data = await response.json()
           setClientInfo(data)
+          console.log('✅ Client info loaded:', data)
+        } else if (response.status === 404 && retryCount < maxRetries) {
+          // Chat ownership might not be created yet, retry after delay
+          retryCount++
+          const delay = Math.min(1000 * retryCount, 5000) // Exponential backoff, max 5s
+          console.log(`⏳ Client info not ready yet, retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})`)
+          timeoutId = setTimeout(fetchClientInfo, delay)
         }
       } catch (error) {
         console.error('Failed to fetch client info:', error)
+        // Retry on error as well
+        if (retryCount < maxRetries) {
+          retryCount++
+          const delay = Math.min(1000 * retryCount, 5000)
+          timeoutId = setTimeout(fetchClientInfo, delay)
+        }
       }
     }
 
     fetchClientInfo()
+
+    // Cleanup timeout on unmount or chatId change
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
+  }, [currentChatId, refreshTrigger])
+
+  // Expose refresh function globally so other components can trigger it
+  useEffect(() => {
+    if (currentChatId && typeof window !== 'undefined') {
+      (window as any).__refreshClientInfo = () => {
+        console.log('🔄 Manually refreshing client info')
+        setRefreshTrigger(prev => prev + 1)
+      }
+    }
   }, [currentChatId])
 
   const handleValueChange = (chatId: string) => {

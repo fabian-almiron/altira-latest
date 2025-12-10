@@ -6,6 +6,7 @@ import {
   updateClient,
   deleteClient,
   getChatsByClientId,
+  getClientById,
 } from '@/lib/db/queries'
 
 export async function GET() {
@@ -63,23 +64,37 @@ export async function POST(request: Request) {
       )
     }
 
-    const client = await createClient({
-      id, // Optional - can be chat ID
-      name,
-      email,
-      phone,
-      company,
-      userId: session.userId,
-    })
+    try {
+      const client = await createClient({
+        id, // Optional - can be chat ID
+        name,
+        email,
+        phone,
+        company,
+        userId: session.userId,
+      })
 
-    if (!client) {
-      return NextResponse.json(
-        { error: 'Failed to create client' },
-        { status: 500 },
-      )
+      if (!client) {
+        return NextResponse.json(
+          { error: 'Failed to create client' },
+          { status: 500 },
+        )
+      }
+
+      return NextResponse.json({ client })
+    } catch (createError: any) {
+      // Handle duplicate key error (race condition)
+      // If another request already created this client, just return it
+      if (createError?.cause?.code === '23505' && id) {
+        console.log(`⚠️ Client ${id} already exists (race condition), returning existing client`)
+        const existingClient = await getClientById({ clientId: id })
+        if (existingClient) {
+          return NextResponse.json({ client: existingClient })
+        }
+      }
+      // Re-throw if it's a different error
+      throw createError
     }
-
-    return NextResponse.json({ client })
   } catch (error) {
     console.error('Error creating client:', error)
     return NextResponse.json(

@@ -303,12 +303,14 @@ export function ClientsContent() {
               This will permanently delete:
             </p>
             <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
-              <li>The chat and all its messages</li>
+              <li>The chat from your v0.dev account</li>
+              <li>All chat messages and generated code</li>
               <li>The GitHub repository (if deployed)</li>
               <li>The Vercel project and deployment (if deployed)</li>
+              <li>All local records and client data</li>
             </ul>
             <p className="mt-4 font-semibold text-red-600 dark:text-red-400 text-sm">
-              This action cannot be undone.
+              ⚠️ This action cannot be undone and will delete from v0.dev!
             </p>
           </div>
           <DialogFooter>

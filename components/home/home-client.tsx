@@ -294,7 +294,7 @@ export function HomeClient() {
           }
           
           // Create ownership with client ID
-          await fetch('/api/chat/ownership', {
+          const ownershipResponse = await fetch('/api/chat/ownership', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -305,6 +305,14 @@ export function HomeClient() {
               websiteName: websiteName,
             }),
           })
+          
+          // Trigger client info refresh in header after successful ownership creation
+          if (ownershipResponse.ok && typeof window !== 'undefined' && (window as any).__refreshClientInfo) {
+            console.log('✅ Chat ownership created, triggering client info refresh')
+            setTimeout(() => {
+              (window as any).__refreshClientInfo()
+            }, 500) // Small delay to ensure data is propagated
+          }
           
           // Clear session storage after creating ownership
           sessionStorage.removeItem('newChatName')

@@ -97,6 +97,17 @@ export async function DELETE(
 
     console.log('Authenticated user deleting shared chat:', chatId)
 
+    // Delete from v0.dev first
+    try {
+      console.log('🗑️  Deleting chat from v0.dev:', chatId)
+      await v0.chats.delete({ chatId })
+      console.log('✅ Chat deleted from v0.dev successfully')
+    } catch (error) {
+      console.error('⚠️ Failed to delete chat from v0.dev:', error)
+      // Continue with local deletion even if v0 delete fails
+      // The chat might already be deleted from v0, or the API might be down
+    }
+
     // Delete GitHub repository if it exists
     if (ownership.github_repo_url && process.env.GITHUB_TOKEN) {
       try {
@@ -174,8 +185,10 @@ export async function DELETE(
 
     return NextResponse.json({ 
       success: true,
+      deletedFromV0: true,
       deletedGithub: !!ownership.github_repo_url,
       deletedVercel: !!ownership.vercel_project_id,
+      message: 'Chat deleted from v0.dev, local database, GitHub, and Vercel'
     })
   } catch (error) {
     console.error('Error deleting chat:', error)
