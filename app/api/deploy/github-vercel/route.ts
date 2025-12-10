@@ -9,6 +9,53 @@ const v0 = createClient(
 )
 
 /**
+ * Adds repository to organization teams
+ * Automatically grants team members access to the repo
+ */
+async function addRepoToTeams(
+  repoFullName: string,
+  githubToken: string,
+  githubOrg: string,
+  teams: string[],
+  permission: string = 'push'
+): Promise<void> {
+  if (!githubOrg || teams.length === 0) {
+    return
+  }
+
+  console.log(`🔐 Adding repo to ${teams.length} team(s)...`)
+
+  for (const teamSlug of teams) {
+    try {
+      const response = await fetch(
+        `https://api.github.com/orgs/${githubOrg}/teams/${teamSlug}/repos/${repoFullName}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${githubToken}`,
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+          body: JSON.stringify({
+            permission: permission,
+          }),
+        }
+      )
+
+      if (response.ok || response.status === 204) {
+        console.log(`✅ Added repo to team: ${teamSlug} (${permission} access)`)
+      } else {
+        const error = await response.json()
+        console.warn(`⚠️ Failed to add repo to team ${teamSlug}:`, error.message)
+      }
+    } catch (error) {
+      console.warn(`⚠️ Error adding repo to team ${teamSlug}:`, error)
+    }
+  }
+}
+
+/**
  * Integrated GitHub + Vercel Deployment
  * 1. Exports code to GitHub repository
  * 2. Creates Vercel project from that GitHub repo
@@ -42,9 +89,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check tokens
+    // Check tokens and configuration
     const githubToken = process.env.GITHUB_TOKEN
+    const githubOrg = process.env.GITHUB_ORG // Optional: organization name
     const vercelToken = process.env.VERCEL_TOKEN
+    const githubTeamsStr = process.env.GITHUB_TEAMS // Optional: comma-separated team slugs
+    const githubTeamPermission = process.env.GITHUB_TEAM_PERMISSION || 'push'
+    
+    // Parse teams from comma-separated string
+    const githubTeams = githubTeamsStr 
+      ? githubTeamsStr.split(',').map(t => t.trim()).filter(t => t.length > 0)
+      : []
 
     if (!githubToken) {
       return NextResponse.json(
@@ -98,8 +153,15 @@ export async function POST(request: NextRequest) {
     console.log(`Found ${chatDetails.files.length} files to export`)
 
     // Create GitHub repository
+    // Use organization endpoint if GITHUB_ORG is set, otherwise use personal account
+    const createRepoEndpoint = githubOrg
+      ? `https://api.github.com/orgs/${githubOrg}/repos`
+      : 'https://api.github.com/user/repos'
+    
+    console.log(`Creating repository at: ${githubOrg ? `org/${githubOrg}` : 'personal account'}`)
+    
     const createRepoResponse = await fetch(
-      'https://api.github.com/user/repos',
+      createRepoEndpoint,
       {
         method: 'POST',
         headers: {
@@ -144,6 +206,17 @@ export async function POST(request: NextRequest) {
     githubRepoUrl = repoData.html_url
     repoFullName = repoData.full_name
     console.log('✅ GitHub repo created:', githubRepoUrl)
+
+    // Add repo to teams if configured
+    if (githubOrg && githubTeams.length > 0) {
+      await addRepoToTeams(
+        repoData.full_name,
+        githubToken,
+        githubOrg,
+        githubTeams,
+        githubTeamPermission
+      )
+    }
 
     // Get default branch and commit SHA
     const defaultBranch = repoData.default_branch || 'main'
@@ -342,6 +415,12 @@ export async function POST(request: NextRequest) {
 
     const vercelProject = await vercelProjectResponse.json()
     console.log('✅ Vercel project created:', vercelProject.name)
+    console.log('📋 Vercel project data:', {
+      id: vercelProject.id,
+      name: vercelProject.name,
+      accountId: vercelProject.accountId,
+      accountSlug: vercelProject.accountSlug,
+    })
 
     // ========================================
     // STEP 3: WAIT FOR PROJECT INITIALIZATION
@@ -482,10 +561,8 @@ export async function POST(request: NextRequest) {
     if (!deployment) {
       console.log('⚠️ Deployment trigger failed, but project is set up')
       
-      // Use correct dashboard URL format
-      const vercelDashboardUrl = vercelProject.link?.org
-        ? `https://vercel.com/${vercelProject.link.org}/${vercelProject.name}`
-        : `https://vercel.com/${vercelProject.name}`
+      // Use hardcoded team slug for dashboard URL
+      const vercelDashboardUrl = `https://vercel.com/dev-strsdevcoms-projects/${vercelProject.name}`
       
       // Save partial deployment info to database
       try {
@@ -543,14 +620,13 @@ export async function POST(request: NextRequest) {
     const productionDomain = `${vercelProject.name}.vercel.app`
     const deploymentUrl = `https://${productionDomain}`
     
-    // Correct Vercel dashboard URL format (without accountId)
-    const vercelDashboardUrl = vercelProject.link?.org
-      ? `https://vercel.com/${vercelProject.link.org}/${vercelProject.name}`
-      : `https://vercel.com/${vercelProject.name}`
+    // Construct Vercel dashboard URL using hardcoded team slug
+    // Format: https://vercel.com/dev-strsdevcoms-projects/{projectName}
+    const vercelDashboardUrl = `https://vercel.com/dev-strsdevcoms-projects/${vercelProject.name}`
     
     console.log('📋 URLs:', {
       production: deploymentUrl,
-      dashboard: vercelDashboardUrl
+      dashboard: vercelDashboardUrl,
     })
     
     // Save deployment information to database

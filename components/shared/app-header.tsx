@@ -55,11 +55,18 @@ export function AppHeader({ className = '' }: AppHeaderProps) {
     : null
 
   // Fetch deployment info for current chat
-  const { data: deploymentInfo } = useSWR(
+  const { data: deploymentInfo, mutate: refreshDeploymentInfo } = useSWR(
     chatId ? `/api/chat/deployment?chatId=${chatId}` : null,
     (url: string) => fetch(url).then((res) => res.ok ? res.json() : null),
     { revalidateOnFocus: false }
   )
+  
+  // Store refresh function globally so other components can trigger it
+  useEffect(() => {
+    if (chatId && typeof window !== 'undefined') {
+      (window as any).__refreshDeploymentInfo = refreshDeploymentInfo
+    }
+  }, [chatId, refreshDeploymentInfo])
 
   // Handle logo click - reset UI if on homepage, otherwise navigate to homepage
   const handleLogoClick = (e: React.MouseEvent) => {

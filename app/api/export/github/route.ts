@@ -9,6 +9,53 @@ const v0 = createClient(
 )
 
 /**
+ * Adds repository to organization teams
+ * Automatically grants team members access to the repo
+ */
+async function addRepoToTeams(
+  repoFullName: string,
+  githubToken: string,
+  githubOrg: string,
+  teams: string[],
+  permission: string = 'push'
+): Promise<void> {
+  if (!githubOrg || teams.length === 0) {
+    return
+  }
+
+  console.log(`🔐 Adding repo to ${teams.length} team(s)...`)
+
+  for (const teamSlug of teams) {
+    try {
+      const response = await fetch(
+        `https://api.github.com/orgs/${githubOrg}/teams/${teamSlug}/repos/${repoFullName}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${githubToken}`,
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+          body: JSON.stringify({
+            permission: permission,
+          }),
+        }
+      )
+
+      if (response.ok || response.status === 204) {
+        console.log(`✅ Added repo to team: ${teamSlug} (${permission} access)`)
+      } else {
+        const error = await response.json()
+        console.warn(`⚠️ Failed to add repo to team ${teamSlug}:`, error.message)
+      }
+    } catch (error) {
+      console.warn(`⚠️ Error adding repo to team ${teamSlug}:`, error)
+    }
+  }
+}
+
+/**
  * Validates and fixes incorrectly nested file paths
  * Prevents components/ui/ui/ nesting issues
  */
@@ -81,8 +128,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check GitHub token
+    // Check GitHub token and configuration
     const githubToken = process.env.GITHUB_TOKEN
+    const githubOrg = process.env.GITHUB_ORG // Optional: organization name
+    const githubTeamsStr = process.env.GITHUB_TEAMS // Optional: comma-separated team slugs
+    const githubTeamPermission = process.env.GITHUB_TEAM_PERMISSION || 'push'
+    
+    // Parse teams from comma-separated string
+    const githubTeams = githubTeamsStr 
+      ? githubTeamsStr.split(',').map(t => t.trim()).filter(t => t.length > 0)
+      : []
 
     if (!githubToken) {
       return NextResponse.json(
@@ -122,8 +177,15 @@ export async function POST(request: NextRequest) {
     console.log(`Found ${chatDetails.files.length} files to export`)
 
     // 2. Create GitHub repository
+    // Use organization endpoint if GITHUB_ORG is set, otherwise use personal account
+    const createRepoEndpoint = githubOrg
+      ? `https://api.github.com/orgs/${githubOrg}/repos`
+      : 'https://api.github.com/user/repos'
+    
+    console.log(`Creating repository at: ${githubOrg ? `org/${githubOrg}` : 'personal account'}`)
+    
     const createRepoResponse = await fetch(
-      'https://api.github.com/user/repos',
+      createRepoEndpoint,
       {
         method: 'POST',
         headers: {
@@ -167,6 +229,17 @@ export async function POST(request: NextRequest) {
 
     const repoData = await createRepoResponse.json()
     console.log('GitHub repo created:', repoData.html_url)
+
+    // Add repo to teams if configured
+    if (githubOrg && githubTeams.length > 0) {
+      await addRepoToTeams(
+        repoData.full_name,
+        githubToken,
+        githubOrg,
+        githubTeams,
+        githubTeamPermission
+      )
+    }
 
     // Get default branch
     const defaultBranch = repoData.default_branch || 'main'

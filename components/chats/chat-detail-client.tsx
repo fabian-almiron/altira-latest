@@ -117,6 +117,12 @@ export function ChatDetailClient() {
               setIsFullscreen={setIsFullscreen}
               refreshKey={refreshKey}
               setRefreshKey={setRefreshKey}
+              onDeploymentComplete={() => {
+                // Trigger refresh of deployment info in header
+                if (typeof window !== 'undefined' && (window as any).__refreshDeploymentInfo) {
+                  (window as any).__refreshDeploymentInfo()
+                }
+              }}
             />
           }
         />

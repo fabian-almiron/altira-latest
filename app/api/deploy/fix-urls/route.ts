@@ -42,11 +42,19 @@ export async function POST(request: NextRequest) {
       // Skip if no Vercel project name
       if (!deployment.vercel_project_id) continue
 
-      // Extract project name from existing URL or use a reconstructed one
+      // Extract project name from existing URLs
       let projectName = ''
       
-      // Try to extract from deployment URL first
-      if (deployment.vercel_deployment_url) {
+      // Try to extract from project URL first
+      if (deployment.vercel_project_url) {
+        const projectUrlMatch = deployment.vercel_project_url.match(/https?:\/\/vercel\.com\/[^\/]+\/([^\/\?]+)/)
+        if (projectUrlMatch) {
+          projectName = projectUrlMatch[1]
+        }
+      }
+      
+      // Try to extract project name from deployment URL if not found
+      if (!projectName && deployment.vercel_deployment_url) {
         const match = deployment.vercel_deployment_url.match(/https?:\/\/([^.]+)\.vercel\.app/)
         if (match) {
           projectName = match[1]
@@ -64,9 +72,9 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      // Construct correct URLs
+      // Construct correct URLs with hardcoded team slug
       const newDeploymentUrl = `https://${projectName}.vercel.app`
-      const newProjectUrl = `https://vercel.com/${projectName}`
+      const newProjectUrl = `https://vercel.com/dev-strsdevcoms-projects/${projectName}`
 
       // Check if update is needed
       const needsUpdate = 

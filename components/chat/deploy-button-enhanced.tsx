@@ -19,6 +19,7 @@ interface DeployButtonEnhancedProps {
   variant?: 'default' | 'outline' | 'ghost'
   size?: 'default' | 'sm' | 'lg' | 'icon'
   className?: string
+  onDeploymentComplete?: () => void
 }
 
 export function DeployButtonEnhanced({
@@ -26,6 +27,7 @@ export function DeployButtonEnhanced({
   variant = 'default',
   size = 'default',
   className = '',
+  onDeploymentComplete,
 }: DeployButtonEnhancedProps) {
   const [isDeploying, setIsDeploying] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
@@ -92,6 +94,11 @@ export function DeployButtonEnhanced({
         setGithubRepoUrl(data.repository?.url || null)
         setVercelDashboard(data.vercelProject?.dashboardUrl || null)
         setDeploymentUrl(data.deployment?.deploymentUrl || null)
+        
+        // Trigger refresh of deployment info in header
+        if (onDeploymentComplete) {
+          onDeploymentComplete()
+        }
       }
       
       console.log('Deployment successful:', data)

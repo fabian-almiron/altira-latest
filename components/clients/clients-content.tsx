@@ -196,7 +196,7 @@ export function ClientsContent() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                          <div className="shrink-0 h-10 w-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
                             <Globe className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div className="ml-4">
@@ -295,18 +295,22 @@ export function ClientsContent() {
           <DialogHeader>
             <DialogTitle>Delete Website</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{websiteToDelete?.websiteName}"? 
-              This will permanently delete:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>The chat and all its messages</li>
-                <li>The GitHub repository (if deployed)</li>
-                <li>The Vercel project and deployment (if deployed)</li>
-              </ul>
-              <p className="mt-2 font-semibold text-red-600 dark:text-red-400">
-                This action cannot be undone.
-              </p>
+              Are you sure you want to delete "{websiteToDelete?.websiteName}"?
             </DialogDescription>
           </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              This will permanently delete:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+              <li>The chat and all its messages</li>
+              <li>The GitHub repository (if deployed)</li>
+              <li>The Vercel project and deployment (if deployed)</li>
+            </ul>
+            <p className="mt-4 font-semibold text-red-600 dark:text-red-400 text-sm">
+              This action cannot be undone.
+            </p>
+          </div>
           <DialogFooter>
             <Button
               variant="outline"

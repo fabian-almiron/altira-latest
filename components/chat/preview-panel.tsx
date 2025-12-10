@@ -22,6 +22,7 @@ interface PreviewPanelProps {
   setIsFullscreen: (fullscreen: boolean) => void
   refreshKey: number
   setRefreshKey: (key: number | ((prev: number) => number)) => void
+  onDeploymentComplete?: () => void
 }
 
 export function PreviewPanel({
@@ -30,6 +31,7 @@ export function PreviewPanel({
   setIsFullscreen,
   refreshKey,
   setRefreshKey,
+  onDeploymentComplete,
 }: PreviewPanelProps) {
   return (
     <div
@@ -68,6 +70,7 @@ export function PreviewPanel({
                 variant="ghost"
                 size="sm"
                 className="h-8 text-xs"
+                onDeploymentComplete={onDeploymentComplete}
               />
               <ExportToGitButton
                 chatId={currentChat.id}

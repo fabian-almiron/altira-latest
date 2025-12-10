@@ -347,6 +347,7 @@ export async function createClient({
   try {
     // If ID is provided, check if client already exists
     if (id) {
+      console.log(`Checking if client with ID ${id} already exists...`)
       const existing = await db
         .select()
         .from(clients)
@@ -354,11 +355,14 @@ export async function createClient({
         .limit(1)
       
       if (existing.length > 0) {
+        console.log(`✅ Client with ID ${id} already exists, returning existing client`)
         return existing[0]
       }
+      console.log(`No existing client found with ID ${id}, creating new...`)
     }
 
     // Insert new client
+    console.log('Inserting new client into database...')
     const [client] = await db
       .insert(clients)
       .values({
@@ -371,8 +375,26 @@ export async function createClient({
       })
       .returning()
     
+    console.log(`✅ New client created successfully with ID: ${client?.id}`)
     return client || null
-  } catch (error) {
+  } catch (error: any) {
+    // Handle duplicate key error gracefully
+    if (error?.code === '23505' && error?.constraint_name === 'clients_pkey') {
+      console.log(`⚠️ Client with ID ${id} was created by another request, fetching...`)
+      // Another request created this client, fetch and return it
+      if (id) {
+        const existing = await db
+          .select()
+          .from(clients)
+          .where(eq(clients.id, id))
+          .limit(1)
+        
+        if (existing.length > 0) {
+          return existing[0]
+        }
+      }
+    }
+    
     console.error('Failed to create client in database')
     throw error
   }
