@@ -92,150 +92,158 @@ export function CustomSignIn() {
   // Email code verification view
   if (codeSent) {
     return (
-      <div className="w-full max-w-md space-y-8">
+      <div className="w-full max-w-xl space-y-8">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <img 
-            src="/logo.svg" 
-            alt="Altira" 
-            className="h-8 w-auto"
-          />
+        <div className="flex justify-center mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 blur-2xl bg-blue-500/20 dark:bg-blue-400/20 animate-pulse" />
+            <img 
+              src="/logo.svg" 
+              alt="Altira" 
+              className="h-10 w-auto relative z-10"
+            />
+          </div>
         </div>
 
         {/* Verification Box with Border */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 p-8">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-              Check your email
-            </h1>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              We sent a verification code to <strong>{email}</strong>
-            </p>
-          </div>
-
-          <form onSubmit={handleVerifyCode} className="space-y-6">
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4">
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border-2 border-gray-200 dark:border-gray-800 p-10">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
+                Check your email
+              </h1>
+              <p className="mt-3 text-base text-gray-600 dark:text-gray-400">
+                We sent a verification code to <strong>{email}</strong>
+              </p>
             </div>
-          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="code">Verification code</Label>
-            <Input
-              id="code"
-              type="text"
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter 6-digit code"
-              className="h-11 text-center text-lg tracking-widest"
-              maxLength={6}
-              disabled={isLoading}
-            />
-          </div>
+            <form onSubmit={handleVerifyCode} className="space-y-6">
+              {error && (
+                <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800 p-4">
+                  <p className="text-sm font-medium text-red-800 dark:text-red-200">{error}</p>
+                </div>
+              )}
 
-          <Button
-            type="submit"
-            className="w-full h-11 text-base"
-            disabled={isLoading || !isLoaded}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              'Verify code'
-            )}
-          </Button>
+              <div className="space-y-3">
+                <Label htmlFor="code" className="text-base font-semibold text-gray-700 dark:text-gray-200">
+                  Verification code
+                </Label>
+                <Input
+                  id="code"
+                  type="text"
+                  required
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="000000"
+                  className="h-16 text-center text-2xl tracking-[0.5em] font-bold border-2 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
+                  maxLength={6}
+                  disabled={isLoading}
+                />
+              </div>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setCodeSent(false)
-                  setCode('')
-                  setError('')
-                }}
-                className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+              <Button
+                type="submit"
+                className="w-full h-14 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 shadow-lg shadow-blue-500/30 dark:shadow-blue-400/20 transition-all hover:scale-[1.02] active:scale-[0.98] rounded-xl"
+                disabled={isLoading || !isLoaded}
               >
-                ← Back to sign in
-              </button>
-            </div>
-          </form>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  'Verify code'
+                )}
+              </Button>
+
+              <div className="text-center pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCodeSent(false)
+                    setCode('')
+                    setError('')
+                  }}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                >
+                  ← Back to sign in
+                </button>
+              </div>
+            </form>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-md space-y-8">
+    <div className="w-full max-w-xl space-y-8">
       {/* Logo */}
-      <div className="flex justify-center mb-8">
-        <img 
-          src="/logo.svg" 
-          alt="Altira" 
-          className="h-8 w-auto"
-        />
+      <div className="flex justify-center mb-12">
+        <div className="relative">
+          <div className="absolute inset-0 blur-2xl bg-blue-500/20 dark:bg-blue-400/20 animate-pulse" />
+          <img 
+            src="/logo.svg" 
+            alt="Altira" 
+            className="h-10 w-auto relative z-10"
+          />
+        </div>
       </div>
 
       {/* Login Box with Border */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 p-8">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Welcome back
-          </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Sign in to your Altira account
-          </p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSendCode} className="space-y-6">
-        {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4">
-            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email address</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="h-11"
-              disabled={isLoading}
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              We'll send you a verification code to sign in
+      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border-2 border-gray-200 dark:border-gray-800 p-10">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
+              Welcome back
+            </h1>
+            <p className="mt-3 text-base text-gray-600 dark:text-gray-400">
+              Sign in to your Altira account
             </p>
           </div>
-        </div>
 
-        <Button
-          type="submit"
-          className="w-full h-11 text-base"
-          disabled={isLoading || !isLoaded}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending code...
-            </>
-          ) : (
-            'Send verification code'
-          )}
-        </Button>
-        </form>
+          {/* Form */}
+          <form onSubmit={handleSendCode} className="space-y-7">
+            {error && (
+              <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800 p-4">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">{error}</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <Label htmlFor="email" className="text-base font-semibold text-gray-700 dark:text-gray-200">
+                Email address
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="h-14 text-base px-4 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
+                disabled={isLoading}
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                We'll send you a verification code to sign in
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-14 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 shadow-lg shadow-blue-500/30 dark:shadow-blue-400/20 transition-all hover:scale-[1.02] active:scale-[0.98] rounded-xl"
+              disabled={isLoading || !isLoaded}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Sending code...
+                </>
+              ) : (
+                'Send verification code'
+              )}
+            </Button>
+          </form>
       </div>
     </div>
   )
