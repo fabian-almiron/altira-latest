@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 
 // Define public routes that don't require authentication
 const isPublicRoute = createRouteMatcher([
-  '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)',
@@ -12,15 +11,23 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, request) => {
   const { pathname } = request.nextUrl
+  const { userId } = await auth()
 
   // Ping endpoint for testing
-  if (pathname.startsWith('/ping')) {
+  if (pathname === '/ping') {
     return new Response('pong', { status: 200 })
   }
 
+  // If accessing homepage without authentication, redirect to sign-in
+  if (pathname === '/' && !userId) {
+    return NextResponse.redirect(new URL('/sign-in', request.url))
+  }
+
   // Protect all routes except public ones
-  if (!isPublicRoute(request)) {
-    await auth.protect()
+  if (!isPublicRoute(request) && !userId) {
+    const signInUrl = new URL('/sign-in', request.url)
+    signInUrl.searchParams.set('redirect_url', pathname)
+    return NextResponse.redirect(signInUrl)
   }
 
   return NextResponse.next()
