@@ -93,16 +93,27 @@ export function CustomSignIn() {
   if (codeSent) {
     return (
       <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Check your email
-          </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            We sent a verification code to <strong>{email}</strong>
-          </p>
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <img 
+            src="/logo.svg" 
+            alt="Altira" 
+            className="h-8 w-auto"
+          />
         </div>
 
-        <form onSubmit={handleVerifyCode} className="mt-8 space-y-6">
+        {/* Verification Box with Border */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 p-8">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+              Check your email
+            </h1>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              We sent a verification code to <strong>{email}</strong>
+            </p>
+          </div>
+
+          <form onSubmit={handleVerifyCode} className="space-y-6">
           {error && (
             <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4">
               <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
@@ -139,38 +150,50 @@ export function CustomSignIn() {
             )}
           </Button>
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setCodeSent(false)
-                setCode('')
-                setError('')
-              }}
-              className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              ← Back to sign in
-            </button>
-          </div>
-        </form>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setCodeSent(false)
+                  setCode('')
+                  setError('')
+                }}
+                className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+              >
+                ← Back to sign in
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="w-full max-w-md space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-          Welcome back
-        </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Sign in to your Altira account
-        </p>
+      {/* Logo */}
+      <div className="flex justify-center mb-8">
+        <img 
+          src="/logo.svg" 
+          alt="Altira" 
+          className="h-8 w-auto"
+        />
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSendCode} className="mt-8 space-y-6">
+      {/* Login Box with Border */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 p-8">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Welcome back
+          </h1>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Sign in to your Altira account
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSendCode} className="space-y-6">
         {error && (
           <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4">
             <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
@@ -212,8 +235,8 @@ export function CustomSignIn() {
             'Send verification code'
           )}
         </Button>
-
-      </form>
+        </form>
+      </div>
     </div>
   )
 }
