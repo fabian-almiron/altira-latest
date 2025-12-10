@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
+import { OTPInput } from './otp-input'
 
 export function CustomSignIn() {
   const { isLoaded, signIn, setActive } = useSignIn()
@@ -123,19 +124,14 @@ export function CustomSignIn() {
                 </div>
               )}
 
-              <div className="space-y-3">
-                <Label htmlFor="code" className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+              <div className="space-y-4">
+                <Label className="text-lg font-semibold text-gray-700 dark:text-gray-200 block text-center">
                   Verification code
                 </Label>
-                <Input
-                  id="code"
-                  type="text"
-                  required
+                <OTPInput
+                  length={6}
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="000000"
-                  className="h-20 text-center text-4xl tracking-[0.5em] font-bold border-2 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
-                  maxLength={6}
+                  onChange={setCode}
                   disabled={isLoading}
                 />
               </div>
