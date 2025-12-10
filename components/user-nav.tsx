@@ -79,13 +79,13 @@ export function UserNav() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
+          <DropdownMenuItem
               onClick={handleSignOut}
-              className="cursor-pointer"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Sign out</span>
-            </DropdownMenuItem>
+            className="cursor-pointer"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Sign out</span>
+          </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>

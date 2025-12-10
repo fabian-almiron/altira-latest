@@ -107,7 +107,7 @@ export function CustomSignIn() {
         </div>
 
         {/* Verification Box with Border */}
-        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border-2 border-gray-200 dark:border-gray-800 p-10">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl border-2 border-gray-200 dark:border-gray-800 p-10">
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
                 Check your email
@@ -138,7 +138,7 @@ export function CustomSignIn() {
 
               <Button
                 type="submit"
-                className="w-full h-14 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 shadow-lg shadow-blue-500/30 dark:shadow-blue-400/20 transition-all hover:scale-[1.02] active:scale-[0.98] rounded-xl"
+                className="w-full h-14 text-base font-semibold bg-white hover:bg-gray-50 text-gray-900 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 border-2 border-gray-200 dark:border-gray-300 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] rounded-xl"
                 disabled={isLoading || !isLoaded}
               >
                 {isLoading ? (
@@ -185,7 +185,7 @@ export function CustomSignIn() {
       </div>
 
       {/* Login Box with Border */}
-      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border-2 border-gray-200 dark:border-gray-800 p-10">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl border-2 border-gray-200 dark:border-gray-800 p-10">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
@@ -205,9 +205,6 @@ export function CustomSignIn() {
             )}
 
             <div className="space-y-3">
-              <Label htmlFor="email" className="text-base font-semibold text-gray-700 dark:text-gray-200">
-                Email address
-              </Label>
               <Input
                 id="email"
                 name="email"
@@ -227,7 +224,7 @@ export function CustomSignIn() {
 
             <Button
               type="submit"
-              className="w-full h-14 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 shadow-lg shadow-blue-500/30 dark:shadow-blue-400/20 transition-all hover:scale-[1.02] active:scale-[0.98] rounded-xl"
+              className="w-full h-14 text-base font-semibold bg-white hover:bg-gray-50 text-gray-900 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 border-2 border-gray-200 dark:border-gray-300 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] rounded-xl"
               disabled={isLoading || !isLoaded}
             >
               {isLoading ? (

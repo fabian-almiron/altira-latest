@@ -229,13 +229,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <Settings className="h-4 w-4" />
                   </button>
                 </Link>
-                <button
+              <button
                   onClick={() => signOut()}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                  title="Sign out"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
               </div>
             </div>
           </div>

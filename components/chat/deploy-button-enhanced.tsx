@@ -43,18 +43,18 @@ export function DeployButtonEnhanced({
 
     try {
       // GitHub + Vercel deployment only
-      if (!repoName) {
+        if (!repoName) {
         setError('Repository name is required')
-        setIsDeploying(false)
-        return
-      }
+          setIsDeploying(false)
+          return
+        }
 
       const endpoint = '/api/deploy/github-vercel'
       const requestBody = {
-        chatId,
-        repoName: repoName || `v0-${chatId.slice(0, 8)}`,
-        projectName: projectName || undefined,
-        isPrivate: true,
+          chatId,
+          repoName: repoName || `v0-${chatId.slice(0, 8)}`,
+          projectName: projectName || undefined,
+          isPrivate: true,
       }
 
       const response = await fetch(endpoint, {
@@ -69,20 +69,20 @@ export function DeployButtonEnhanced({
 
       if (!response.ok) {
         // Handle GitHub + Vercel specific errors
-        if (data.error?.includes('GitHub token')) {
-          setError(
-            'GitHub token not configured. Add GITHUB_TOKEN to your .env.local file.',
-          )
-        } else if (data.error?.includes('Vercel token')) {
-          setError(
-            'Vercel token not configured. Add VERCEL_TOKEN to your .env.local file.',
-          )
-        } else if (data.error?.includes('already exists')) {
-          setError(
-            'Repository already exists on GitHub. Please choose a different name.',
-          )
-        } else {
-          setError(data.details || data.error || 'Deployment failed')
+          if (data.error?.includes('GitHub token')) {
+            setError(
+              'GitHub token not configured. Add GITHUB_TOKEN to your .env.local file.',
+            )
+          } else if (data.error?.includes('Vercel token')) {
+            setError(
+              'Vercel token not configured. Add VERCEL_TOKEN to your .env.local file.',
+            )
+          } else if (data.error?.includes('already exists')) {
+            setError(
+              'Repository already exists on GitHub. Please choose a different name.',
+            )
+          } else {
+            setError(data.details || data.error || 'Deployment failed')
         }
         return
       }
@@ -234,21 +234,21 @@ export function DeployButtonEnhanced({
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="repo-name">
-                  Repository Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="repo-name"
-                  placeholder={`my-app-${chatId.slice(0, 6)}`}
-                  value={repoName}
-                  onChange={(e) => setRepoName(e.target.value)}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Choose a unique name for your GitHub repository
-                </p>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="repo-name">
+                    Repository Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="repo-name"
+                    placeholder={`my-app-${chatId.slice(0, 6)}`}
+                    value={repoName}
+                    onChange={(e) => setRepoName(e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Choose a unique name for your GitHub repository
+                  </p>
+                </div>
 
               <div className="space-y-2">
                 <Label htmlFor="project-name">
