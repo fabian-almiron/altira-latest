@@ -149,7 +149,7 @@ export function NewChatForm() {
               {isLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Continue to Chat
+              Continue
             </Button>
           </div>
         </form>
