@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClerkAuth } from '@/lib/clerk-auth'
-import { db } from '@/lib/db/connection'
-import { chatOwnership } from '@/lib/db/schema'
+import db from '@/lib/db/connection'
+import { chat_ownerships } from '@/lib/db/schema'
 import { sql, isNotNull } from 'drizzle-orm'
 
 /**
@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
     // Get all deployments with vercel_project_id (meaning they were deployed)
     const deployments = await db
       .select()
-      .from(chatOwnership)
-      .where(isNotNull(chatOwnership.vercel_project_id))
+      .from(chat_ownerships)
+      .where(isNotNull(chat_ownerships.vercel_project_id))
       .execute()
 
     console.log(`📋 Found ${deployments.length} deployments to check`)
@@ -81,12 +81,12 @@ export async function POST(request: NextRequest) {
 
         // Update the database
         await db
-          .update(chatOwnership)
+          .update(chat_ownerships)
           .set({
             vercel_deployment_url: newDeploymentUrl,
             vercel_project_url: newProjectUrl,
           })
-          .where(sql`${chatOwnership.v0_chat_id} = ${deployment.v0_chat_id}`)
+          .where(sql`${chat_ownerships.v0_chat_id} = ${deployment.v0_chat_id}`)
           .execute()
 
         updatedCount++
